@@ -1,6 +1,6 @@
 # 产品与系统需求
 
-版本：v0.1｜状态：Draft｜仓库：`event-contract-lab`
+版本：v0.2｜状态：Draft｜仓库：`event-contract-lab`
 
 ## 1. 产品定义
 
@@ -101,6 +101,23 @@ Agent 运维和审计。
 
 验收：不登录服务器即可判断 Agent 是否健康以及数据停在哪一段。
 
+### FR-700 容量、成本与数据生命周期
+
+- `FR-701`：每个运行环境必须记录实例、磁盘、对象存储、网络和观测成本标签。
+- `FR-702`：按 source/stream 输出 events/s、raw bytes/day、compressed bytes/day、
+  对象数、压缩比和 quarantine 比例，并能外推 30/90/365 天容量。
+- `FR-703`：WAL 默认保留 24–72 小时，ClickHouse 默认热存 30–90 天；长期原始数据
+  进入不可变对象存储，保留期由 D-006 批准。
+- `FR-704`：对象以 64–256 MB 或等价时间窗 seal，禁止无上限小对象增长；每个
+  segment 有 checksum、schema version、source/time range 和重放 manifest。
+- `FR-705`：计算、热盘、快照、对象存储、流出流量和 secret 必须分别预算并设告警。
+- `FR-706`：网络或地域升级必须由 order ack/user stream/fill 的 paired benchmark
+  证明，不以 ICMP ping 或实例标称带宽代替。
+- `FR-707`：购买 1/3 年承诺前必须积累至少 30 天利用率与容量曲线，实验节点不得承诺。
+
+验收：能够用同一份输入重算月/年成本；预算偏差超过 25% 有归因；对象存储样本可
+恢复到空 ClickHouse；扩容和长期购买均关联 benchmark 与人工审批。
+
 ## 5. 非功能需求
 
 | 编号 | 要求 |
@@ -112,6 +129,9 @@ Agent 运维和审计。
 | NFR-05 | benchmark 报告同时给出样本数、窗口、时钟误差和异常计数 |
 | NFR-06 | 单源故障不得破坏其他源的采集和原始落盘 |
 | NFR-07 | 部署、回滚和数据恢复有自动化脚本与演练记录 |
+| NFR-08 | 磁盘剩余低于 30% 或 14 天预测将耗尽时告警；低于 15% 停止非关键回补 |
+| NFR-09 | quarantine 超过总事件 1% 或单源基线两倍时告警，不允许静默增长 |
+| NFR-10 | 执行 benchmark 至少覆盖 result/event → order ack → user update → fill 分段 |
 
 ## 6. 里程碑
 

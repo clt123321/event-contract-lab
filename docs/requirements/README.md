@@ -14,6 +14,7 @@
 | [PRODUCT_REQUIREMENTS.md](PRODUCT_REQUIREMENTS.md) | 产品目标、系统能力、范围和验收标准 | 目标或范围变化 |
 | [DEVELOPMENT_READINESS.md](DEVELOPMENT_READINESS.md) | 大规模开发、上云和实盘前门禁 | 每个里程碑前 |
 | [OPEN_DECISIONS.md](OPEN_DECISIONS.md) | 人工决策及截止点 | 决策作出或失效 |
+| [INFRASTRUCTURE_CAPACITY_AND_COST.md](INFRASTRUCTURE_CAPACITY_AND_COST.md) | 容量模型、租赁明细和阶段预算 | benchmark 或价格变化 |
 | [SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTURE.md) | 目标架构和数据流 | 架构决策变化 |
 | [INFERRED_ORIGINAL_TOPOLOGY.md](../architecture/INFERRED_ORIGINAL_TOPOLOGY.md) | 原项目可观察部署事实和置信度 | 新证据出现 |
 | [DATA_SOURCE_STATUS.md](../../recon/DATA_SOURCE_STATUS.md) | 数据源、鉴权、连通性和表结构状态 | 数据源状态变化 |

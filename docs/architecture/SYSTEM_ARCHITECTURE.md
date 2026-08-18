@@ -1,6 +1,6 @@
 # 目标系统架构
 
-版本：v0.1｜状态：Proposed
+版本：v0.2｜状态：Proposed
 
 ## 1. 总体结构
 
@@ -89,6 +89,18 @@ tools/benchmark/         # 当前 Node 探索工具后续迁入位置
   region 的原始事件独立落盘，不能把公网复制延迟混为源到达延迟。
 - **控制与查询**：早期可与东京节点合并以降低复杂度；生产阶段按故障域拆分。
 - **冷归档**：对象存储保存可重放原始数据；ClickHouse 可删除重建，不是唯一真相源。
+
+### 5.1 分阶段资源边界
+
+| 阶段 | 计算 | 热存储 | 冷存储 | 边界 |
+|---|---|---|---|---|
+| S0 14 天 benchmark | 东京 c7i.large/xlarge 顺序 A/B | 200 GB WAL | R2 样本 | 总预算 ≤ $150 |
+| M1 3 个月研究 | c7i.xlarge + r7i.xlarge + 小控制节点 | 2.35 TB gp3 | R2 长期 | paper only |
+| L1 目标子集 | 执行/采集分离 + r7i.2xlarge | 4.65 TB gp3 | R2 ≥12 月 | 30 天后再承诺 |
+| L2 原系统尺度 | 东京 + 伦敦 + 8 TB hot | 按实测扩展 | R2 ≥12 月 | 必须重新立项 |
+
+对象存储 segment 目标 64–256 MB；WAL 24–72 小时，ClickHouse 30–90 天。容量与
+采购公式见 [`INFRASTRUCTURE_CAPACITY_AND_COST.md`](../requirements/INFRASTRUCTURE_CAPACITY_AND_COST.md)。
 
 ## 6. 故障边界与安全
 

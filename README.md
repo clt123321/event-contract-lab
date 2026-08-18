@@ -21,6 +21,7 @@
 - [产品与系统需求](docs/requirements/PRODUCT_REQUIREMENTS.md)
 - [开发与部署准备度](docs/requirements/DEVELOPMENT_READINESS.md)
 - [待人工决策清单](docs/requirements/OPEN_DECISIONS.md)
+- [基础设施容量与成本](docs/requirements/INFRASTRUCTURE_CAPACITY_AND_COST.md)
 - [目标系统架构](docs/architecture/SYSTEM_ARCHITECTURE.md)
 - [原项目推断拓扑](docs/architecture/INFERRED_ORIGINAL_TOPOLOGY.md)
 - [数据源与连通性状态](recon/DATA_SOURCE_STATUS.md)
