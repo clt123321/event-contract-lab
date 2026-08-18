@@ -1,0 +1,21 @@
+{
+  "name": "event-contract-latency-benchmark",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "discover:polymarket": "node src/discover-polymarket.mjs",
+    "collect:binance": "node src/collect-binance.mjs",
+    "collect:polymarket": "node src/collect-polymarket.mjs",
+    "collect:public": "node src/collect-public.mjs",
+    "diagnose:network": "node src/diagnose-network.mjs",
+    "probe:clock": "node src/probe-clock.mjs",
+    "summarize": "node src/summarize.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

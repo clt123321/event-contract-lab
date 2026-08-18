@@ -1,0 +1,32 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+
+node_modules/
+**/node_modules/
+*.log
+*.tmp
+*.swp
+
+# Runtime captures, diagnostics and local benchmark reports.
+benchmark/data/
+
+# Generated visual QA pages. Keep the source generator and final PDF/DOCX.
+qa_render/page-*.png
+
+# Language/tool caches.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+coverage/
+dist/
+build/
+
+# Secrets and credentials must never enter Git.
+*.pem
+*.key
+*.p12
+credentials.json
+secrets/

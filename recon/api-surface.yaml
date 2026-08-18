@@ -1,0 +1,66 @@
+version: 0.1
+observed_at: 2026-08-17
+status: inferred_from_public_browser_bundle
+
+services:
+  console_bff:
+    base_path: /api
+    endpoints:
+      - { method: GET, path: /session, purpose: current_session }
+      - { method: POST, path: /login, purpose: login }
+      - { method: POST, path: /logout, purpose: logout }
+      - { method: POST, path: /password, purpose: change_password }
+      - { method: GET, path: /summary, purpose: console_summary }
+      - { method: GET, path: /accounts, purpose: list_accounts }
+      - { method: POST, path: /accounts, purpose: add_account }
+      - { method: DELETE, path: "/accounts/{account_id}", purpose: delete_account }
+      - { method: PATCH, path: "/accounts/{account_id}", purpose: patch_account }
+      - { method: PUT, path: /accounts/reorder, purpose: reorder_accounts }
+      - { method: GET, path: "/accounts/{account_id}/config", purpose: account_config }
+      - { method: GET, path: /balances, purpose: all_balances }
+      - { method: GET, path: "/accounts/{account_id}/balance", purpose: account_balance }
+      - { method: POST, path: "/accounts/{account_id}/balance/refresh", purpose: refresh_balance }
+      - { method: GET, path: "/accounts/{account_id}/positions", query: [cursor, limit], purpose: positions }
+      - { method: GET, path: "/accounts/{account_id}/orders", query: [cursor, limit], purpose: orders }
+      - { method: DELETE, path: "/accounts/{account_id}/orders/{order_id}", purpose: cancel_order }
+      - { method: GET, path: "/accounts/{account_id}/activity", query: [page, limit, type, cursor], purpose: activity }
+      - { method: GET, path: "/accounts/{account_id}/activity/sync", purpose: activity_sync_status }
+      - { method: POST, path: "/accounts/{account_id}/activity/sync", query: [full], purpose: activity_sync }
+      - { method: GET, path: "/accounts/{account_id}/pnl", query: [range], purpose: account_pnl }
+      - { method: POST, path: "/accounts/{account_id}/sell", purpose: sell_position }
+      - { method: GET, path: /pnl/overview, query: [month, account_ids, refresh], purpose: pnl_overview }
+      - { method: GET, path: /warehouse/overview, purpose: warehouse_overview }
+      - { method: GET, path: /warehouse/quality, query: [range, refresh], purpose: warehouse_quality }
+      - { method: GET, path: /settings, purpose: settings }
+      - { method: PATCH, path: /settings, purpose: patch_settings }
+
+  agent_control:
+    base_path: /agent/api
+    websocket: /agent/ui/ws
+    endpoints:
+      - { method: GET, path: /agents, purpose: list_agents }
+      - { method: PATCH, path: "/agents/{agent_id}", purpose: update_agent }
+      - { method: GET, path: "/agents/{agent_id}/kms", purpose: kms_status }
+      - { method: POST, path: "/agents/{agent_id}/kms-intro", purpose: request_kms_intro }
+      - { method: POST, path: "/agents/{agent_id}/profile", purpose: bind_or_switch_profile }
+      - { method: POST, path: "/agents/{agent_id}/commands", body_hint: "{ op: start|stop }", purpose: process_command }
+      - { method: GET, path: "/agents/{agent_id}/logs", query: [limit, before_ts_ms], purpose: agent_logs }
+      - { method: GET, path: /profiles, purpose: list_profiles }
+      - { method: POST, path: /profiles, purpose: create_profile }
+      - { method: GET, path: "/profiles/{profile_id}", purpose: profile_detail_and_versions }
+      - { method: PATCH, path: "/profiles/{profile_id}", purpose: update_profile }
+      - { method: GET, path: "/profiles/{profile_id}/config", purpose: profile_config }
+      - { method: POST, path: "/profiles/{profile_id}/versions", purpose: publish_profile_version }
+      - { method: POST, path: /profiles/preview-config, purpose: render_or_validate_toml_with_account_bindings }
+
+websocket_events:
+  - snapshot
+  - agent.updated
+  - agent.registered
+  - agent.log
+  - profile_changed_family
+
+notes:
+  - This is an interface inventory, not an authorization to call mutation endpoints.
+  - Response schemas remain to be reconstructed from clean-room fixtures or an author-provided OpenAPI specification.
+  - Secrets, production profile contents, credentials and private parameters are intentionally excluded.
