@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { parseBinanceMessage } from "../src/binance.mjs";
-import { parsePolymarketMessage } from "../src/polymarket.mjs";
+import { parsePolymarketMessage, polymarketSnapshotRecords } from "../src/polymarket.mjs";
 
 test("Binance parser normalizes microsecond timestamps and sequences", () => {
   const parse = parseBinanceMessage({ sessionId: "s1", symbol: "BTCUSDT" });
@@ -65,4 +65,37 @@ test("Binance BBO update id is not treated as a contiguous sequence", () => {
 
   assert.equal(record.sequence_start, null);
   assert.equal(record.sequence_end, null);
+});
+
+test("Polymarket public snapshot produces metadata, book and trade records", () => {
+  const records = polymarketSnapshotRecords({
+    sessionId: "snapshot-1",
+    clock: { wallMs: 1_787_000_010_000, monoNs: "500" },
+    snapshot: {
+      market: { id: "7", slug: "btc-market", conditionId: "0xcondition" },
+      orderbooks: [{
+        market: "0xcondition",
+        asset_id: "yes-token",
+        timestamp: "1787000000000",
+        bids: [],
+        asks: [],
+      }],
+      trades: [{
+        conditionId: "0xcondition",
+        asset: "yes-token",
+        timestamp: 1_787_000_005,
+        price: 0.6,
+        size: 10,
+      }],
+    },
+  });
+
+  assert.deepEqual(records.map((record) => record.stream), [
+    "gamma_market",
+    "clob_book_rest",
+    "data_trades",
+  ]);
+  assert.equal(records[1].snapshot_age_ms, 10_000);
+  assert.equal(records[2].source_trade_ts_ms, 1_787_000_005_000);
+  assert.equal(records[2].snapshot_age_ms, null);
 });

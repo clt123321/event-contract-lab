@@ -7,15 +7,15 @@
 
 | ID | 决策 | 建议默认值 | 最晚时点 | 状态 |
 |---|---|---|---|---|
-| D-001 | 第一目标 venue 与研究问题 | Predict.fun + Binance 参考价；先只读和 paper | M1 启动 | 待确认 |
+| D-001 | 第一目标 venue 与研究问题 | Predict.fun + Polymarket 双目标 venue；Binance 参考价；数据优先 | M1 启动 | 已确认 2026-08-18 |
 | D-002 | 主技术栈 | Rust：采集/回放/执行；TypeScript：控制台；SQL/Python：研究 | 大规模编码前 | 已确认 2026-08-18 |
 | D-003 | 仓库组织 | 单一 monorepo，按 `collectors/core/replay/execution/control/infra` 分包 | 大规模编码前 | 建议采用 |
 | D-004 | 首个云节点 | AWS 东京，14 天内顺序测试 c7i.large/xlarge | G2 | $150 上限已批准；云账号待配置 |
-| D-005 | Polymarket 范围 | 默认仅公共研究数据；任何交易路径需单独资格与合规结论 | G2/G3 | 待确认 |
-| D-006 | 热/冷数据保留 | 本地 WAL 3–7 天、ClickHouse 热数据按查询需求、Parquet/R2 长期归档 | M1 DDL 前 | 待成本测算 |
+| D-005 | Polymarket 范围 | 作为目标 venue 接入公开数据；execution 需 geoblock/账户/合规结论 | G2/G3 | 只读已确认；写入阻塞 |
+| D-006 | 热/冷数据保留 | 本地 WAL 3–7 天、ClickHouse 热数据按查询需求、Parquet/R2 长期归档 | M2 DDL 前 | 待成本测算 |
 | D-007 | 延迟与完整性 SLO | 24h benchmark 后设定，不用 15 秒烟雾测试定指标 | M1 验收 | 待数据 |
 | D-008 | Chainlink/Deribit 清单 | 只接策略和结算实际需要的 feed/channel | 相关采集器开发前 | 缺业务输入 |
-| D-009 | ClickHouse 形态 | M1 单机可重建；生产再比较托管与自建 | M4 | 延后 |
+| D-009 | ClickHouse 形态 | M2 单机可重建；生产再比较托管与自建 | M2 | 延后 |
 | D-010 | live 风险预算 | 默认关闭；额度、日损、库存、canary 和审批人需书面确定 | G3 | 阻塞 live |
 | D-011 | 仓库可见性 | 初期 private，公开前做来源、许可证、数据与 secret 审查 | 推送 GitHub 前 | 建议采用 |
 | D-012 | 冷存储供应商 | M1 用 R2；30 天后按 AWS 流出费、回放读取和操作数与 S3 复算 | M1 部署前 | 待批准 |
@@ -42,7 +42,9 @@ Predict.fun 的公开开发者信息指向 `ap-northeast-1`，Binance 当前公�
 ### D-005 地域与资格
 
 云节点只用于改善可用性和测量质量，不用于绕过平台地域限制。Polymarket 的数据
-研究和账户交易必须分开评估；如果账户/地区不具备资格，live adapter 保持禁用。
+研究和账户交易必须分开评估；公开 Gamma/Data/CLOB read 与 Market WebSocket 可以进入
+M1。execution 前必须从实际出口 IP 调用官方 geoblock endpoint，并由账户/合规负责人
+确认；如果不具备资格，live adapter 保持禁用。当前未发现官方公开 sandbox/testnet。
 
 ### D-006 / D-012 数据生命周期
 

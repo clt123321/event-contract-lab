@@ -1,6 +1,6 @@
 # 产品与系统需求
 
-版本：v0.2｜状态：Draft｜仓库：`event-contract-lab`
+版本：v0.3｜状态：Draft｜仓库：`event-contract-lab`
 
 ## 1. 产品定义
 
@@ -43,13 +43,16 @@ Agent 运维和审计。
 ### FR-100 数据接入与时钟
 
 - `FR-101 CONFIRMED`：接入 Binance trade、depth、bookTicker。
-- `FR-102 CONFIRMED`：接入 Polymarket Gamma 主数据和 Market Channel。
-- `FR-103`：接入 Predict.fun REST/WS，只读阶段不得调用订单写接口。
+- `FR-102 CONFIRMED`：接入 Polymarket Gamma、Data API、CLOB read 和 Market Channel；
+  只读接口不因其被列为目标 venue 而升级为交易授权。
+- `FR-103`：接入 Predict.fun Testnet/主网授权 REST/WS；只读阶段不得调用订单写接口。
 - `FR-104`：接入 Chainlink Data Streams 指定 feed。
 - `FR-105`：接入 Deribit 指定 index/perpetual/options channel。
 - `FR-106`：每条事件记录源时间、接收 wall clock、接收 monotonic clock和序列信息。
 - `FR-107`：采集器必须实现心跳、退避重连、重订阅、断序检测和原始 payload 保留。
 - `FR-108`：部署前必须验证 DNS、TLS、WebSocket 和 NTP/PTP。
+- `FR-109`：source role 必须显式区分 execution venue、reference、oracle 和 research；
+  Predict.fun/Polymarket 为目标 venue，Binance 为首个 reference source。
 
 验收：连续 24 小时无静默断流；重连和断序均有记录；源时间缺失不会伪造延迟。
 
@@ -61,6 +64,8 @@ Agent 运维和审计。
 - `FR-204`：建立 source connection、latency sample、data quality 事实表。
 - `FR-205`：支持 NDJSON/Parquet 冷存储和 ClickHouse 热查询。
 - `FR-206`：隔离无效时间戳、负价差、断序、交叉盘口和不可恢复 book。
+- `FR-207`：数据分为 Raw/Bronze、Canonical/Silver、Serving/Gold，后两层均可由上游重建。
+- `FR-208`：建立 dataset manifest 和字段 lineage，Gold 指标可回溯到 canonical 行和原始对象。
 
 验收：任意事实行可回溯到原始事件；同一批数据重复转换结果一致。
 
@@ -70,6 +75,8 @@ Agent 运维和审计。
 - `FR-302`：模拟费用、结算、盘口冲击、延迟、队列和部分成交。
 - `FR-303`：支持 train/validation/test 时间切分和参数实验记录。
 - `FR-304`：报告容量、换手、滑点敏感性和统计可信度。
+- `FR-305`：point-in-time join 禁止未来数据泄漏；特征记录 as-of time、版本和输入数据集。
+- `FR-306`：实验登记 commit、config、dataset、seed、参数、失败结果和完整 artifact。
 
 验收：黄金夹具结果确定；同一提交、配置、数据版本的结果可复现。
 
@@ -118,6 +125,19 @@ Agent 运维和审计。
 验收：能够用同一份输入重算月/年成本；预算偏差超过 25% 有归因；对象存储样本可
 恢复到空 ClickHouse；扩容和长期购买均关联 benchmark 与人工审批。
 
+### FR-800 DFX 工程能力
+
+- `FR-801`：提供一键 bootstrap、统一任务入口、本地 mock、fixture 和示例配置。
+- `FR-802`：建立 unit、contract、integration、property/fuzz、黄金回放和故障注入测试。
+- `FR-803`：CI 覆盖格式、lint、类型、测试、依赖/许可证、secret、SAST、SBOM 和镜像扫描。
+- `FR-804`：部署由 IaC、预检、不可变配置、canary、回滚和 runbook 管理。
+- `FR-805`：定义数据/服务 SLO、RPO/RTO、budget 和性能回归门禁并保留演练证据。
+- `FR-806`：正式实验与发布具备 code/config/schema/data/artifact provenance。
+- `FR-807`：敏感写操作记录 actor、审批、环境、原因、payload hash 和结果，不记录 secret。
+
+验收：新环境 30 分钟内跑通只读采集；CI 能复现网络/限流/乱序/磁盘故障；空库恢复、
+部署回滚和 secret 泄漏拦截均有自动化证据。
+
 ## 5. 非功能需求
 
 | 编号 | 要求 |
@@ -132,17 +152,21 @@ Agent 运维和审计。
 | NFR-08 | 磁盘剩余低于 30% 或 14 天预测将耗尽时告警；低于 15% 停止非关键回补 |
 | NFR-09 | quarantine 超过总事件 1% 或单源基线两倍时告警，不允许静默增长 |
 | NFR-10 | 执行 benchmark 至少覆盖 result/event → order ack → user update → fill 分段 |
+| NFR-11 | P99/吞吐、schema、兼容性或安全回归超过批准阈值时阻断合并/发布 |
+| NFR-12 | 正式数据集和实验不能依赖 notebook 隐式状态或未版本化手工修改 |
+| NFR-13 | 所有服务提供 health/readiness、资源水位、版本和配置指纹 |
 
 ## 6. 里程碑
 
 | 阶段 | 交付物 | 当前判断 |
 |---|---|---|
 | M0 探索与契约 | 源清单、原始 envelope、网络与时钟诊断 | 基本完成 |
-| M1 数据基线 | 24h 多区域 benchmark、Parquet、质量报告 | 可立即开始 |
-| M2 回放骨架 | 事件回放、费用/结算、黄金夹具 | 可并行开发 |
-| M3 策略 SDK | paper 策略、订单状态机、模拟执行 | 可开发接口，参数待定 |
-| M4 控制与数仓 | Agent、配置、日志、ClickHouse | 可开发骨架，DDL 待验证 |
-| M5 实盘门禁 | KMS、风控、对账、canary | 当前禁止进入 |
+| M1 数据链路与模型 | 双 venue 只读、WAL、Parquet、质量报告、canonical schema | 可立即开始 |
+| M2 数仓与数据集 | Bronze/Silver/Gold、ClickHouse、manifest、lineage、恢复 | 等 24h 样本定 DDL |
+| M3 研究与回放 | 冻结数据集、point-in-time、replay、费用/结算、黄金夹具 | 可先建接口 |
+| M4 Paper OMS | 双 venue adapter 接口、订单状态机、模拟执行 | 不启用主网写 |
+| M5 DFX/控制面强化 | CI、安全、Agent、IaC、SLO、恢复和审计 | 从 M1 贯穿实施 |
+| M6 实盘门禁 | KMS、风控、对账、canary | 当前禁止进入 |
 
 ## 7. 完成定义
 

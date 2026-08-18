@@ -4,6 +4,8 @@ import { runWebSocketCollector } from "./ws-collector.mjs";
 
 export const POLYMARKET_WS = "wss://ws-subscriptions-clob.polymarket.com/ws/market";
 export const POLYMARKET_MARKETS = "https://gamma-api.polymarket.com/markets";
+export const POLYMARKET_CLOB_BOOK = "https://clob.polymarket.com/book";
+export const POLYMARKET_DATA_TRADES = "https://data-api.polymarket.com/trades";
 
 function parseJsonArray(value) {
   if (Array.isArray(value)) return value;
@@ -33,6 +35,7 @@ export async function discoverPolymarketMarkets({ query = "bitcoin", limit = 200
     })
     .map((market) => ({
       id: market.id,
+      conditionId: market.conditionId ?? null,
       slug: market.slug,
       question: market.question,
       endDate: market.endDate,
@@ -43,6 +46,88 @@ export async function discoverPolymarketMarkets({ query = "bitcoin", limit = 200
       assetIds: parseJsonArray(market.clobTokenIds),
     }))
     .filter((market) => market.assetIds.length > 0);
+}
+
+export async function fetchPolymarketPublicSnapshot({ market, lookup, tradeLimit = 100 } = {}) {
+  if (!market?.assetIds?.length) throw new Error("market with at least one asset ID is required");
+
+  const orderbooks = await Promise.all(market.assetIds.map(async (assetId) => {
+    const url = new URL(POLYMARKET_CLOB_BOOK);
+    url.searchParams.set("token_id", String(assetId));
+    return requestJson(url, { lookup });
+  }));
+
+  let trades = [];
+  if (market.conditionId) {
+    const url = new URL(POLYMARKET_DATA_TRADES);
+    url.searchParams.set("market", String(market.conditionId));
+    url.searchParams.set("limit", String(tradeLimit));
+    trades = await requestJson(url, { lookup });
+  }
+
+  return { market, orderbooks, trades };
+}
+
+export function polymarketSnapshotRecords({ sessionId, snapshot, clock }) {
+  const base = {
+    schema_version: 1,
+    session_id: sessionId,
+    source: "polymarket",
+    recv_wall_ts_ms: clock.wallMs,
+    recv_mono_ns: clock.monoNs,
+    sequence_start: null,
+    sequence_end: null,
+  };
+  const records = [{
+    ...base,
+    record_kind: "market_metadata",
+    stream: "gamma_market",
+    instrument: snapshot.market.slug ?? String(snapshot.market.id),
+    event_type: "market_snapshot",
+    source_event_ts_ms: null,
+    source_trade_ts_ms: null,
+    arrival_latency_ms: null,
+    snapshot_age_ms: null,
+    payload: snapshot.market,
+  }];
+
+  for (const book of snapshot.orderbooks ?? []) {
+    const sourceEventTsMs = normalizeEpochMs(book.timestamp);
+    records.push({
+      ...base,
+      record_kind: "market_data",
+      stream: "clob_book_rest",
+      instrument: String(book.asset_id ?? "unknown"),
+      asset_id: book.asset_id ?? null,
+      market: book.market ?? snapshot.market.conditionId ?? null,
+      event_type: "book",
+      source_event_ts_ms: sourceEventTsMs,
+      source_trade_ts_ms: null,
+      arrival_latency_ms: null,
+      snapshot_age_ms: sourceEventTsMs === null ? null : clock.wallMs - sourceEventTsMs,
+      payload: book,
+    });
+  }
+
+  for (const trade of snapshot.trades ?? []) {
+    const sourceTradeTsMs = normalizeEpochMs(trade.timestamp);
+    records.push({
+      ...base,
+      record_kind: "market_data",
+      stream: "data_trades",
+      instrument: String(trade.asset ?? trade.conditionId ?? "unknown"),
+      asset_id: trade.asset ?? null,
+      market: trade.conditionId ?? snapshot.market.conditionId ?? null,
+      event_type: "trade",
+      source_event_ts_ms: sourceTradeTsMs,
+      source_trade_ts_ms: sourceTradeTsMs,
+      arrival_latency_ms: null,
+      snapshot_age_ms: null,
+      payload: trade,
+    });
+  }
+
+  return records;
 }
 
 export function parsePolymarketMessage({ sessionId, assetLabels = new Map(), allowedAssetIds = null }) {

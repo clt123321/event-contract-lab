@@ -6,6 +6,7 @@
     "discover:polymarket": "node src/discover-polymarket.mjs",
     "collect:binance": "node src/collect-binance.mjs",
     "collect:polymarket": "node src/collect-polymarket.mjs",
+    "snapshot:polymarket": "node src/snapshot-polymarket.mjs",
     "collect:public": "node src/collect-public.mjs",
     "diagnose:network": "node src/diagnose-network.mjs",
     "probe:clock": "node src/probe-clock.mjs",

@@ -22,8 +22,8 @@ DNS 设置。
 | 优先级 | 数据源 | 目标用途 | 已知接口/数据 | 鉴权 | 当前状态 | 下一步 |
 |---|---|---|---|---|---|---|
 | P0 | Binance Spot | 基准价格、成交、深度、BBO、时钟对照 | REST `/api/v3/time`；WS `trade`、`depth@100ms`、`bookTicker` | 公共行情无需鉴权 | **已接通并实采** | 连续采集 30 分钟以上；校正本机时钟；建立频率和断序基线 |
-| P0 | Polymarket | 预测市场主数据、订单簿、价格变化、成交价 | Gamma Markets API；CLOB Market Channel | 公共市场频道无需鉴权 | **已接通并实采** | 人工固定活跃合约；延长观察窗口以取得 `price_change`/`last_trade_price` 样本 |
-| P1 | Predict.fun | 当前目标策略的主要预测市场行情、市场生命周期与执行对照 | 正式文档 `dev.predict.fun`；REST `https://api.predict.fun`；WS `wss://ws.predict.fun/ws` | 主网需要 API key；默认 240 req/min | **契约已确认，缺授权 key 与本地采集样本** | 申请最小权限 key；实现 heartbeat echo 和只读采集；不碰执行接口 |
+| P0 | Polymarket | 目标 venue：主数据、订单簿、价格变化、成交价 | Gamma、Data API、CLOB read、Market Channel | 公开读取无需鉴权；交易需 L1/L2 | **四类只读接口已接通并实采；execution 阻塞** | 固定合约并运行 24h；交易前实际出口 IP geoblock/账户/合规确认 |
+| P0 | Predict.fun | 目标 venue：行情、市场生命周期与执行对照 | Testnet/Mainnet REST；`wss://ws.predict.fun/ws` | Testnet 无 API key；主网 key 默认 240 req/min；个人操作需 JWT | **契约已确认，缺授权回复与本地样本** | 实现 Testnet/read-only；申请 key；写接口默认关闭 |
 | P1 | Chainlink Data Streams | 结算/预言机参考价格和跨源校验 | SignalX 中观察到 7 个 feed | 需要授权账户/凭据 | **缺凭据与 feed ID** | 确认 7 个 feed 的名称、ID、网络、时间戳和授权方式 |
 | P1 | Deribit | BTC/ETH 衍生品参考价格、波动率和期限结构 | 已观察到 Deribit 数据链路，具体频道未固化 | 公共行情通常无需鉴权 | **待契约确认** | 确定 instrument/channel 清单和时间戳语义，再做只读采集器 |
 | P2 | Gemini | CEX top-of-book、成交和跨源参考 | 运行日志观察到 Gemini WebSocket top-of-book/trades | 公共行情通常无需鉴权 | **已观察，非首期目标** | 仅在 Binance 单源失效或跨源校验需要时接入 |
@@ -160,6 +160,11 @@ CDN 地址以后可能变化。
   不再混入实时到达延迟。
 - 15 秒 Polymarket 活跃合约样本只收到初始快照，实时事件延迟仍需更长采集窗口。
 
+新增的公共只读快照工具已在 2026-08-18 实际跑通 Gamma market discovery、两个
+CLOB REST orderbook 和 Data API recent trades；一次小样本写入 1 条 market metadata、
+2 条 book、5 条 public trade，共 8 条 NDJSON。样本保存在 Git 忽略目录，只用于推导
+canonical schema，不包含任何本项目账户凭据或订单写请求。
+
 ## 6. 日常排查命令
 
 ```bash
@@ -185,6 +190,9 @@ npm run collect:public -- \
   --symbol BTCUSDT \
   --polymarket-query bitcoin \
   --dns doh
+
+# Gamma metadata + CLOB REST books + Data API public trades
+npm run snapshot:polymarket -- --query bitcoin --trade-limit 100 --dns doh
 ```
 
 ## 7. 仍需人工决策或外部输入
@@ -193,11 +201,11 @@ npm run collect:public -- \
    time.apple.com` 出现 DNS lookup failure；直接查询 DoH 返回的 Apple NTP IP
    可以成功，测得约 `+2.33 s` offset。需要管理员检查“自动设置日期与时间”并
    为系统配置可靠 DNS；在偏差稳定低于 10 ms 前，不发布正式单向延迟结论。
-2. **Polymarket 合约选择**：不能长期用关键词后自动选成交额第一名；需要固定
+2. **双 venue 合约选择**：不能长期用关键词后自动选成交额第一名；需要固定
    market ID/asset IDs，并定义换月或到期切换规则。
 3. **benchmark 口径**：确定采集地域、持续时间、P50/P95/P99 门槛、断序率、
    重连率和允许的时钟误差。
-4. **Predict.fun**：正式端点、API key、默认 240 req/min 和 15 秒 heartbeat 已确认；
+4. **Predict.fun**：正式端点、Testnet 无 key、主网 key 默认 240 req/min 和 15 秒 heartbeat 已确认；
    官方基础设施信息指向 `ap-northeast-1`。仍需申请最小权限 key、确认账户/使用
    条款并取得实际消息样本。
 5. **Chainlink**：提供授权方式与 7 个 feed ID；密钥不得写入仓库。
@@ -207,11 +215,16 @@ npm run collect:public -- \
 8. **执行 benchmark 口径**：作者提出“直接对着下单接口测”，需进一步确认是
    HTTP ACK、用户流确认还是 first fill，以及是否使用有效订单和预热连接。详细矩阵见
    [`OBSERVABLE_SURFACE_FINDINGS_20260818.md`](./OBSERVABLE_SURFACE_FINDINGS_20260818.md)。
+9. **Polymarket execution**：官方只读接口无需鉴权，但写接口需钱包/L1/L2；实际出口
+   IP 必须先通过 geoblock 检查，不能以更换云区域规避限制。
 
 ## 8. 官方协议参考
 
 - [Binance Spot WebSocket Streams](https://developers.binance.com/en/docs/binance-spot-api-docs/web-socket-streams)
 - [Polymarket Market Channel](https://docs.polymarket.com/market-data/websocket/market-channel)
 - [Polymarket WebSocket Overview](https://docs.polymarket.com/market-data/websocket/overview)
+- [Polymarket API Overview](https://docs.polymarket.com/api-reference/introduction)
+- [Polymarket Authentication](https://docs.polymarket.com/api-reference/authentication)
+- [Polymarket Geographic Restrictions](https://docs.polymarket.com/api-reference/geoblock)
 - [Polymarket Quickstart](https://docs.polymarket.com/quickstart)
 - [Predict.fun Developer Documentation](https://dev.predict.fun/)

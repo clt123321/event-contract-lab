@@ -1,6 +1,6 @@
 # 目标系统架构
 
-版本：v0.2｜状态：Proposed
+版本：v0.3｜状态：Proposed
 
 ## 1. 总体结构
 
@@ -79,12 +79,13 @@ docs/                    # 需求、架构、ADR、runbook
 tools/benchmark/         # 当前 Node 探索工具后续迁入位置
 ```
 
-在 D-002/D-003 未确认前，不做机械搬迁；现有 `benchmark/` 继续作为可运行的探索基线。
+D-002 技术栈已确认；在 D-003 仓库布局未确认前不做机械搬迁，现有 `benchmark/`
+继续作为可运行的探索基线。
 
 ## 5. 初始部署拓扑
 
-- **东京测量节点**：优先验证 Predict.fun、Binance 和所需参考价，运行 collector、
-  WAL、质量指标与 paper strategy。
+- **东京测量节点**：优先验证 Predict.fun、Binance 和 Polymarket 只读数据，运行
+  collector、WAL 和质量指标；Polymarket 交易资格不能由该节点位置推定。
 - **第二地域节点**：只有在业务和平台条款允许且 benchmark 证明必要时增加；不同
   region 的原始事件独立落盘，不能把公网复制延迟混为源到达延迟。
 - **控制与查询**：早期可与东京节点合并以降低复杂度；生产阶段按故障域拆分。
@@ -112,6 +113,6 @@ tools/benchmark/         # 当前 Node 探索工具后续迁入位置
 
 ## 7. 尚未冻结的架构点
 
-技术栈、最终 region、ClickHouse 托管方式、冷热保留、确切 SLO 和 live venue 均为
-开放决策，见 [`OPEN_DECISIONS.md`](../requirements/OPEN_DECISIONS.md)。这些不妨碍
-数据契约、回放接口和 paper OMS 的先行开发。
+最终 region、ClickHouse 托管方式、冷热保留、确切 SLO 和 live 资格仍为开放决策，
+见 [`OPEN_DECISIONS.md`](../requirements/OPEN_DECISIONS.md)。技术栈与双目标 venue 已确认；
+这些开放项不妨碍只读数据链路、数仓候选和研究接口先行开发。

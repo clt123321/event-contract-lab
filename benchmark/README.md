@@ -7,6 +7,7 @@ Supported in v0.1:
 
 - Binance Spot public market-data WebSocket: trades, depth deltas and BBO.
 - Polymarket public Gamma discovery API and Market Channel WebSocket.
+- Polymarket public CLOB REST orderbook and Data API trade snapshots.
 - NDJSON capture with wall-clock and monotonic receive timestamps.
 - Basic arrival-latency, sequence-gap, reconnect and parse-error summaries.
 
@@ -28,6 +29,9 @@ npm install
 
 # Inspect candidate Polymarket markets and token IDs.
 npm run discover:polymarket -- --query bitcoin --limit 10
+
+# Capture Gamma metadata, REST books and recent public trades into one NDJSON file.
+npm run snapshot:polymarket -- --query bitcoin --trade-limit 100
 
 # Estimate server-minus-local clock offset before collecting.
 npm run probe:clock -- --samples 10

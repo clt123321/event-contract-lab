@@ -7,7 +7,7 @@
 
 | 工作包 | 准备度 | 说明 |
 |---|---:|---|
-| 公共行情采集器 | 高 | Binance、Polymarket 已跑通；Predict.fun 的正式端点已确认，取得 key 后可接入 |
+| 公共行情采集器 | 高 | Binance、Polymarket 已跑通；Predict.fun Testnet/read-only 契约已确认，主网 key 待申请 |
 | 原始事件层 | 高 | envelope、时钟字段、不可变原始 payload 已确定 |
 | 数据质量与延迟报告 | 高 | 已有采集、网络诊断、时钟探针和汇总脚本 |
 | Parquet/R2 归档 | 中高 | 可先按日期/来源/流分区，生命周期和保留期待定 |
@@ -17,8 +17,8 @@
 | Agent/控制面/可观测性 | 中 | 注册、心跳、配置、日志、指标等通用部分可开发 |
 | live execution | 低/禁止 | 缺凭据治理、资格确认、风控、对账、kill switch 和 canary 审批 |
 
-建议先完成 M1 数据基线与 M2 回放骨架，再扩大团队或长期服务器投入。二者能消除
-最多的架构不确定性，也不会锁死最终交易平台。
+建议先完成 M1 数据链路与模型，再进入 M2 数仓和 M3 研究回放。DFX 基线从 M1 同步
+建设，不把测试、安全、恢复和可观测性留到最后补。
 
 ## 2. 大规模开发前门禁
 
@@ -27,9 +27,10 @@
 - [x] 数据源按“已确认、推断、阻塞”分级。
 - [x] 公共数据原始 envelope 已版本化。
 - [x] 本地 DNS 故障已定位并有项目内绕行方案。
-- [ ] Predict.fun 使用授权、只读 API key 和消息样本到位。
+- [ ] Predict.fun 官方工单确认 Testnet create/cancel 频率；主网只读 API key 和消息样本到位。
 - [ ] Chainlink 目标 feed ID、Deribit 目标 channel 由业务负责人确认。
-- [ ] Polymarket 只做研究数据还是包含授权交易，由合规/业务负责人决定。
+- [x] Polymarket 作为目标 venue 接入公开只读数据。
+- [ ] Polymarket execution 需实际出口 IP geoblock、账户和合规负责人确认。
 
 ### G1：工程基线
 
@@ -44,8 +45,8 @@
 
 - [ ] 云账号、预算、账单告警和资源负责人明确。
 - [x] 首轮 14 天预算上限 $150 已批准；长期资源和 1 年承诺未被提前购买。
-- [ ] 东京节点完成不少于 24 小时的连续 benchmark；若研究 Polymarket，再按其
-  条款选择合法地域单独测量。
+- [ ] 东京节点完成不少于 24 小时的只读连续 benchmark；Polymarket execution 必须
+  在未来实际出口 IP 上单独完成 geoblock 与资格检查。
 - [ ] 节点启用 chrony/云厂商时间服务；正式样本时钟偏差稳定低于 10 ms，并在
   每份报告中记录偏差和采样方法。
 - [ ] IaC、最小安全组、非 root 运行账户、磁盘加密、自动补丁策略完成。
@@ -84,13 +85,15 @@
 
 ## 4. 开发顺序建议
 
-1. 固定数据契约、采集器状态机和 24h benchmark runner。
-2. 建立原始 WAL、Parquet 转换、质量检查和 ClickHouse 候选表。
-3. 用冻结数据集开发确定性 replay、费用/结算和 paper OMS。
-4. 建立 Agent 心跳、配置、日志、指标与部署自动化。
-5. 根据 benchmark 和回放结果决定是否投入低延迟优化及 live execution。
+1. 固定双目标 venue 数据契约、采集器状态机和 24h benchmark runner。
+2. 建立原始 WAL、Parquet/R2、manifest、质量检查和 canonical schema。
+3. 用 24h/7d 样本确定 Bronze/Silver/Gold、ClickHouse DDL 和冻结数据集。
+4. 开发 point-in-time research、确定性 replay、费用/结算和 paper OMS。
+5. 全程强化 CI、安全、测试、观测、IaC、回滚和恢复等 DFX 能力。
+6. 根据 benchmark 和回放结果决定是否投入低延迟优化及 live execution。
 
 任何步骤都不得因为“接口已接通”而跳过 G2/G3。
 
 资源规格、三阶段采购上限和年度现金需求见
 [`INFRASTRUCTURE_CAPACITY_AND_COST.md`](INFRASTRUCTURE_CAPACITY_AND_COST.md)。
+详细优先级与 P2/P3 验收见 [`IMPLEMENTATION_ROADMAP.md`](IMPLEMENTATION_ROADMAP.md)。

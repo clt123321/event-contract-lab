@@ -8,10 +8,11 @@
 
 ## 当前状态
 
-- Binance 与 Polymarket 公共行情已在本地接通。
+- Binance 与 Polymarket Gamma/Data/CLOB/Market WS 公共行情已在本地接通。
 - 已建立 NDJSON 原始事件结构、时钟探针、网络诊断和延迟汇总。
 - 当前网络的系统 DNS 存在污染，采集器已支持项目内 DoH。
 - 已恢复 SignalX 可观察的控制面/API 边界和推断部署拓扑。
+- Predict.fun 与 Polymarket 已确认为双目标 venue，第一期仅推进公开/授权只读数据链路。
 - 大部分公共数据层、回放层和控制面骨架可以开始开发。
 - 大规模服务器部署和实盘执行仍受开发门禁约束。
 
@@ -20,6 +21,7 @@
 - [需求文档索引](docs/requirements/README.md)
 - [产品与系统需求](docs/requirements/PRODUCT_REQUIREMENTS.md)
 - [开发与部署准备度](docs/requirements/DEVELOPMENT_READINESS.md)
+- [P0–P3 实施路线图与 DFX](docs/requirements/IMPLEMENTATION_ROADMAP.md)
 - [待人工决策清单](docs/requirements/OPEN_DECISIONS.md)
 - [基础设施容量与成本](docs/requirements/INFRASTRUCTURE_CAPACITY_AND_COST.md)
 - [目标系统架构](docs/architecture/SYSTEM_ARCHITECTURE.md)

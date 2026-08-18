@@ -200,7 +200,7 @@ order ack/fill、4 TB hot 不满足已批准保留期，或已签署的可用性
 |---|---:|---:|---|
 | IaC、安全、告警、恢复演练 | 8–15 engineer-days | 否 | G2 必需 |
 | 数据契约、采集器、benchmark | 15–25 engineer-days | 否 | M1 必需 |
-| replay、paper OMS、质量规则 | 25–45 engineer-days | 否 | M2–M3 |
+| replay、paper OMS、质量规则 | 25–45 engineer-days | 否 | M3–M4 |
 | 合计工程投入 | 48–85 engineer-days | 否 | 按 ¥2,000–4,000/day 为 ¥96k–340k |
 | 外部数据/API | $0–500/month 暂存 | 否 | 等正式报价/账户条款，不可自动消费 |
 | 法律、合规、账户资格 | 待报价 | 否 | 阻塞 live，不阻塞只读研究 |
