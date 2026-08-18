@@ -25,6 +25,7 @@
 - [原项目推断拓扑](docs/architecture/INFERRED_ORIGINAL_TOPOLOGY.md)
 - [数据源与连通性状态](recon/DATA_SOURCE_STATUS.md)
 - [清洁室勘察记录](recon/EXPLORATION.md)
+- [SignalX 可观察面深挖报告](recon/OBSERVABLE_SURFACE_FINDINGS_20260818.md)
 - [公共接口基准工具](benchmark/README.md)
 
 ## 快速验证

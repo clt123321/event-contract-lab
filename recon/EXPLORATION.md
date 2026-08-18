@@ -1,6 +1,9 @@
 # SignalX 清洁室源码勘察记录 v0.1
 
-勘察日期：2026-08-17
+勘察日期：2026-08-17；2026-08-18 补充授权控制台深挖
+
+最新的 Agent、Profile、订单行为和 150 亿行仓库统计见
+[`OBSERVABLE_SURFACE_FINDINGS_20260818.md`](./OBSERVABLE_SURFACE_FINDINGS_20260818.md)。
 
 ## 结论
 
@@ -101,7 +104,8 @@ Agent 规范化字段至少包括：`agent_id/name/display_state/service/host/re
 - 交易所/预测市场适配器实现。
 - ClickHouse DDL、物化视图和数据校验 SQL。
 - 回测撮合器、队列模型、费用/结算模拟器。
-- winner-tail-sweep、lead-lag 等策略的真实特征、参数和风控阈值。
+- winner-tail-sweep 等策略的完整实现、全部特征、资金管理和风控阈值。授权控制台已
+  暴露部分运行配置与行为，但这些证据不等于完整算法，也不应直接作为复建默认参数。
 - 密钥、账户凭证、KMS 数据和私有 Profile 内容。
 - 账本、对账和 PnL 归因的服务端实现。
 

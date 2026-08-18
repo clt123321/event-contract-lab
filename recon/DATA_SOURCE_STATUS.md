@@ -26,8 +26,11 @@ DNS 设置。
 | P1 | Predict.fun | 当前目标策略的主要预测市场行情、市场生命周期与执行对照 | 正式文档 `dev.predict.fun`；REST `https://api.predict.fun`；WS `wss://ws.predict.fun/ws` | 主网需要 API key；默认 240 req/min | **契约已确认，缺授权 key 与本地采集样本** | 申请最小权限 key；实现 heartbeat echo 和只读采集；不碰执行接口 |
 | P1 | Chainlink Data Streams | 结算/预言机参考价格和跨源校验 | SignalX 中观察到 7 个 feed | 需要授权账户/凭据 | **缺凭据与 feed ID** | 确认 7 个 feed 的名称、ID、网络、时间戳和授权方式 |
 | P1 | Deribit | BTC/ETH 衍生品参考价格、波动率和期限结构 | 已观察到 Deribit 数据链路，具体频道未固化 | 公共行情通常无需鉴权 | **待契约确认** | 确定 instrument/channel 清单和时间戳语义，再做只读采集器 |
+| P2 | Gemini | CEX top-of-book、成交和跨源参考 | 运行日志观察到 Gemini WebSocket top-of-book/trades | 公共行情通常无需鉴权 | **已观察，非首期目标** | 仅在 Binance 单源失效或跨源校验需要时接入 |
+| P2 | Kalshi / Polymarket.US | 事件合约 venue 对照 | 控制台存在账户适配器和历史 PnL；当前非主要收益来源 | 账户鉴权且有地区/资格要求 | **适配器存在，目标未确认** | 保持在合规评审后再决定，不进入首期执行范围 |
 | P2 | Cloudflare R2 | 原始数据归档、回放和批量回补 | 对象存储归档路径 | 需要 bucket/account 只读权限 | **待授权与目录清单** | 获取脱敏 object key 样例、分区规则、压缩和 schema 版本 |
 | P2 | ClickHouse | 标准化数仓、聚合、质量与研究查询 | 已观察到约 43 张表；`mkt_cex`、`mkt_pred`、`mkt_ref`、`mkt_quarantine`、`etl`、`research` 等分层 | 内部访问 | **结构可部分推断，DDL 未取得** | 索取 DDL/字段字典；用本地实采 payload 验证字段，而不是照抄推断 |
+| P3 | NOAA | 天气事件参考数据 | 配置 schema 中存在 `ingest.noaa`，当前禁用 | 待确认 | **仅见配置入口** | 有明确天气策略需求后再研究 |
 
 SignalX 自有 `/api/*`、`/agent/api/*` 和 `/agent/ui/ws` 属于控制面与行为对照，
 不是本项目应依赖的原始行情源。接口清单见
@@ -201,6 +204,9 @@ npm run collect:public -- \
 6. **Deribit**：确认需要 spot index、perpetual、options 还是 volatility index。
 7. **部署位置**：DoH 解决了接口可达性，但当前约 280 ms 的 Binance 到达延迟
    不适合作为低延迟生产节点；需要决定东京/新加坡等靠近数据源的 benchmark 节点。
+8. **执行 benchmark 口径**：作者提出“直接对着下单接口测”，需进一步确认是
+   HTTP ACK、用户流确认还是 first fill，以及是否使用有效订单和预热连接。详细矩阵见
+   [`OBSERVABLE_SURFACE_FINDINGS_20260818.md`](./OBSERVABLE_SURFACE_FINDINGS_20260818.md)。
 
 ## 8. 官方协议参考
 

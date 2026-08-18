@@ -1,6 +1,6 @@
-version: 0.1
-observed_at: 2026-08-17
-status: inferred_from_public_browser_bundle
+version: 0.2
+observed_at: 2026-08-18
+status: observed_from_current_frontend_and_authorized_console
 
 services:
   console_bff:
@@ -49,6 +49,7 @@ services:
       - { method: POST, path: /profiles, purpose: create_profile }
       - { method: GET, path: "/profiles/{profile_id}", purpose: profile_detail_and_versions }
       - { method: PATCH, path: "/profiles/{profile_id}", purpose: update_profile }
+      - { method: POST, path: "/profiles/{profile_id}/duplicate", purpose: duplicate_profile }
       - { method: GET, path: "/profiles/{profile_id}/config", purpose: profile_config }
       - { method: POST, path: "/profiles/{profile_id}/versions", purpose: publish_profile_version }
       - { method: POST, path: /profiles/preview-config, purpose: render_or_validate_toml_with_account_bindings }
@@ -62,5 +63,6 @@ websocket_events:
 
 notes:
   - This is an interface inventory, not an authorization to call mutation endpoints.
+  - Read-only UI inspection confirmed that profile bindings, version history, KMS state and ClickHouse-backed logs are active.
   - Response schemas remain to be reconstructed from clean-room fixtures or an author-provided OpenAPI specification.
   - Secrets, production profile contents, credentials and private parameters are intentionally excluded.
