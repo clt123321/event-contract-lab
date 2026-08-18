@@ -8,9 +8,9 @@
 | ID | 决策 | 建议默认值 | 最晚时点 | 状态 |
 |---|---|---|---|---|
 | D-001 | 第一目标 venue 与研究问题 | Predict.fun + Binance 参考价；先只读和 paper | M1 启动 | 待确认 |
-| D-002 | 主技术栈 | Rust：采集/回放/执行；TypeScript：控制台；SQL/Python：研究 | 大规模编码前 | 待确认 |
+| D-002 | 主技术栈 | Rust：采集/回放/执行；TypeScript：控制台；SQL/Python：研究 | 大规模编码前 | 已确认 2026-08-18 |
 | D-003 | 仓库组织 | 单一 monorepo，按 `collectors/core/replay/execution/control/infra` 分包 | 大规模编码前 | 建议采用 |
-| D-004 | 首个云节点 | AWS 东京，小规格性能型实例先跑 24h，再按证据扩容 | G2 | 待预算确认 |
+| D-004 | 首个云节点 | AWS 东京，14 天内顺序测试 c7i.large/xlarge | G2 | $150 上限已批准；云账号待配置 |
 | D-005 | Polymarket 范围 | 默认仅公共研究数据；任何交易路径需单独资格与合规结论 | G2/G3 | 待确认 |
 | D-006 | 热/冷数据保留 | 本地 WAL 3–7 天、ClickHouse 热数据按查询需求、Parquet/R2 长期归档 | M1 DDL 前 | 待成本测算 |
 | D-007 | 延迟与完整性 SLO | 24h benchmark 后设定，不用 15 秒烟雾测试定指标 | M1 验收 | 待数据 |

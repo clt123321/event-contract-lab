@@ -18,6 +18,7 @@
 | [SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTURE.md) | 目标架构和数据流 | 架构决策变化 |
 | [INFERRED_ORIGINAL_TOPOLOGY.md](../architecture/INFERRED_ORIGINAL_TOPOLOGY.md) | 原项目可观察部署事实和置信度 | 新证据出现 |
 | [DATA_SOURCE_STATUS.md](../../recon/DATA_SOURCE_STATUS.md) | 数据源、鉴权、连通性和表结构状态 | 数据源状态变化 |
+| [PREDICTFUN_BENCHMARK_ONBOARDING.md](../runbooks/PREDICTFUN_BENCHMARK_ONBOARDING.md) | Predict.fun 测试网、API 申请和下单 benchmark 入门 | API/SDK 契约变化 |
 
 ## 需求变更规则
 
