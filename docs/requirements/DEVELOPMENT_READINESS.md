@@ -1,6 +1,6 @@
 # 开发与部署准备度
 
-版本：v0.2｜评估日期：2026-08-18
+版本：v0.3｜评估日期：2026-08-20
 结论：**可以开始开发大部分只读数据、回放、paper execution 和控制面骨架；尚不具备大规模生产部署和实盘准入条件。**
 
 ## 1. 当前可立即开发的范围
@@ -36,10 +36,13 @@
 
 - [x] 本地 Git 仓库、忽略规则、需求与架构文档。
 - [x] 主技术栈采用 Rust：采集/回放/执行，TypeScript：控制面，SQL/Python：研究。
-- [ ] 按已确认技术栈建立 monorepo 目录布局。
-- [ ] 建立 CI：格式、静态检查、单元测试、依赖审计和 secret scan。
-- [ ] 建立 schema/config 版本策略、变更审查规则和 ADR 模板。
-- [ ] 建立测试数据脱敏规则；生产 payload 不直接进入公开测试夹具。
+- [x] 按已确认技术栈建立 monorepo 目录布局。
+- [x] 建立 CI：Rust 格式/Clippy/测试、Node 测试、Raw→WAL 集成和 secret scan。
+- [x] 建立 schema/config 版本策略、变更审查规则和 ADR 模板。
+- [x] 建立测试数据脱敏规则；首个 fixture 为明确标记的 synthetic payload。
+
+当前 CI 已加入 npm 高危漏洞门禁和 RustSec 依赖审计；许可证策略与 schema 自动代码生成将在
+后续 DFX 批次加入。这不阻塞只读 Raw/WAL 开发，但在 G2 部署前必须完成。
 
 ### G2：服务器部署门禁
 
@@ -93,6 +96,23 @@
 6. 根据 benchmark 和回放结果决定是否投入低延迟优化及 live execution。
 
 任何步骤都不得因为“接口已接通”而跳过 G2/G3。
+
+## 5. 2026-08-20 实施增量
+
+已完成的本地工程闭环：
+
+```text
+现有公共源 NDJSON
+  → RawEventEnvelope v1 校验
+  → 64 MiB 默认分段 WAL
+  → flush + fsync + 原子 seal
+  → SHA-256/row/byte/time/source/stream manifest
+  → 独立 verify
+```
+
+进程重启时，完整 NDJSON 行会被恢复并封存；未完成的尾部字节会原样进入 quarantine，
+不会伪装成有效事件或静默丢弃。此闭环是本地实现证据，不等同于 G2 的 24h soak、磁盘满、
+R2 回补或空 ClickHouse 恢复已经通过。
 
 资源规格、三阶段采购上限和年度现金需求见
 [`INFRASTRUCTURE_CAPACITY_AND_COST.md`](INFRASTRUCTURE_CAPACITY_AND_COST.md)。

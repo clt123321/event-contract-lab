@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "project": "event-contract-lab",
+  "execution": {
+    "mode": "disabled",
+    "live_enabled": false,
+    "reason": "Live execution is blocked until the independent G3 approval gate."
+  },
+  "retention": {
+    "wal_hours": 72,
+    "wal_sync_every_rows": 1000,
+    "wal_sync_interval_ms": 1000,
+    "clickhouse_hot_days": 60,
+    "object_storage_raw_months": 12,
+    "segment_target_mib": {
+      "default": 64,
+      "maximum": 256
+    }
+  },
+  "sources": {
+    "binance": {
+      "role": "reference_price",
+      "access_mode": "public_read_only",
+      "symbols": ["BTCUSDT", "ETHUSDT"],
+      "streams": ["trade", "depth@100ms", "bookTicker"]
+    },
+    "predict_fun": {
+      "role": "target_venue",
+      "environment": "testnet",
+      "access_mode": "read_only",
+      "assets": ["BTC", "ETH"],
+      "cadence": "short_cycle",
+      "approved_market_ids": [],
+      "external_blockers": [
+        "Official Discord ticket response",
+        "Testnet collector permission/key",
+        "Sanitized message fixtures"
+      ]
+    },
+    "polymarket": {
+      "role": "target_venue",
+      "access_mode": "public_read_only",
+      "selection_policy": "manual_freeze_after_public_discovery",
+      "approved_market_count": { "minimum": 3, "maximum": 5 },
+      "approved_markets": [],
+      "readiness": "blocked_until_manual_market_freeze"
+    }
+  },
+  "deferred_sources": ["chainlink", "deribit"]
+}

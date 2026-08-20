@@ -5,12 +5,14 @@
 
 node_modules/
 **/node_modules/
+target/
 *.log
 *.tmp
 *.swp
 
 # Runtime captures, diagnostics and local benchmark reports.
 benchmark/data/
+data/
 
 # Generated visual QA pages. Keep the source generator and final PDF/DOCX.
 qa_render/page-*.png
@@ -30,3 +32,7 @@ build/
 *.p12
 credentials.json
 secrets/
+
+# Local IDE and Rust tooling state.
+.idea/
+.vscode/

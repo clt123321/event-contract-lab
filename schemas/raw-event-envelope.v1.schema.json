@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/raw-event-envelope.v1.schema.json",
+  "title": "RawEventEnvelope v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "record_kind",
+    "session_id",
+    "source",
+    "stream",
+    "event_type",
+    "recv_wall_ts_ms",
+    "recv_mono_ns"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "record_kind": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "minLength": 1 },
+    "stream": { "type": "string", "minLength": 1 },
+    "instrument": { "type": ["string", "null"] },
+    "event_type": { "type": "string", "minLength": 1 },
+    "source_event_ts_ms": { "type": ["number", "null"] },
+    "source_trade_ts_ms": { "type": ["number", "null"] },
+    "recv_wall_ts_ms": { "type": "number", "exclusiveMinimum": 0 },
+    "recv_mono_ns": { "type": "string", "pattern": "^[0-9]+$" },
+    "sequence_start": { "type": ["integer", "null"] },
+    "sequence_end": { "type": ["integer", "null"] },
+    "payload": {}
+  },
+  "additionalProperties": true
+}
