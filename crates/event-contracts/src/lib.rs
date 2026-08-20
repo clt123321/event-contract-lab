@@ -10,7 +10,9 @@ pub const RAW_EVENT_SCHEMA_VERSION: u32 = 1;
 pub const CANONICAL_EVENT_SCHEMA_VERSION: u32 = 1;
 pub const SEGMENT_MANIFEST_SCHEMA_VERSION: u32 = 1;
 pub const DATASET_MANIFEST_SCHEMA_VERSION: u32 = 1;
+pub const DATASET_MANIFEST_V2_SCHEMA_VERSION: u32 = 2;
 pub const TRANSFORM_MANIFEST_SCHEMA_VERSION: u32 = 1;
+pub const REPLAY_MANIFEST_SCHEMA_VERSION: u32 = 1;
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum ContractError {
@@ -266,6 +268,66 @@ pub struct DatasetManifest {
     pub random_seed: u64,
     #[serde(default)]
     pub parameters: BTreeMap<String, Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DatasetInput {
+    pub transform_manifest_file: String,
+    pub transform_manifest_sha256: String,
+    pub transform_id: String,
+}
+
+/// Frozen, content-addressed research input. Version 2 removes creation time and replay seed from
+/// dataset identity; those belong to operational/replay evidence, not the immutable data set.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DatasetManifestV2 {
+    pub schema_version: u32,
+    pub dataset_id: String,
+    pub dataset_builder_version: String,
+    pub code_commit: String,
+    pub canonical_schema_version: u32,
+    pub parquet_schema_version: u32,
+    pub quality_mask_version: String,
+    pub quality_mask_sha256: String,
+    pub inputs: Vec<DatasetInput>,
+    pub parquet_files: Vec<FileArtifact>,
+    pub input_rows: u64,
+    pub included_rows: u64,
+    pub excluded_rows: u64,
+    pub exclusion_counts: BTreeMap<String, u64>,
+    pub min_available_at_ms: Option<f64>,
+    pub max_available_at_ms: Option<f64>,
+    pub sources: BTreeSet<String>,
+    pub instruments: BTreeSet<String>,
+    #[serde(default)]
+    pub parameters: BTreeMap<String, Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ReplayFrame {
+    pub schema_version: u32,
+    pub replay_sequence: u64,
+    pub virtual_time_ms: f64,
+    pub elapsed_virtual_ms: f64,
+    pub event: CanonicalMarketEvent,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ReplayManifest {
+    pub schema_version: u32,
+    pub replay_id: String,
+    pub replay_engine_version: String,
+    pub dataset_manifest_file: String,
+    pub dataset_manifest_sha256: String,
+    pub dataset_id: String,
+    pub replay_config_version: String,
+    pub replay_config_sha256: String,
+    pub code_commit: String,
+    pub random_seed: u64,
+    pub event_count: u64,
+    pub first_virtual_time_ms: Option<String>,
+    pub last_virtual_time_ms: Option<String>,
+    pub output: FileArtifact,
 }
 
 #[cfg(test)]

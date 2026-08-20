@@ -13,3 +13,7 @@ change the CI safety policy. A configuration-only change cannot enable live exec
 
 `quality-policy.v1.json` is the first Raw→Silver acceptance policy. Formal transforms bind its SHA-256;
 semantic changes require a new policy version rather than editing evidence for an existing dataset.
+
+`quality-mask.strict-v1.json` is the default Silver→Dataset research mask. It excludes every warning;
+purpose-specific relaxations require a new file, version and human approval. `replay.v1.json` freezes the
+replay seed and optional event cap. Both files are hashed into their output manifests.

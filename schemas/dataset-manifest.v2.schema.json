@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/dataset-manifest.v2.schema.json",
+  "title": "DatasetManifest v2",
+  "type": "object",
+  "required": [
+    "schema_version", "dataset_id", "dataset_builder_version", "code_commit",
+    "canonical_schema_version", "parquet_schema_version", "quality_mask_version",
+    "quality_mask_sha256", "inputs", "parquet_files", "input_rows", "included_rows",
+    "excluded_rows", "exclusion_counts", "min_available_at_ms", "max_available_at_ms",
+    "sources", "instruments", "parameters"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "dataset_id": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "dataset_builder_version": { "type": "string", "minLength": 1 },
+    "code_commit": { "type": "string", "minLength": 1 },
+    "canonical_schema_version": { "const": 1 },
+    "parquet_schema_version": { "const": 1 },
+    "quality_mask_version": { "type": "string", "minLength": 1 },
+    "quality_mask_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "inputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/input" } },
+    "parquet_files": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/artifact" } },
+    "input_rows": { "type": "integer", "minimum": 1 },
+    "included_rows": { "type": "integer", "minimum": 1 },
+    "excluded_rows": { "type": "integer", "minimum": 0 },
+    "exclusion_counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+    "min_available_at_ms": { "type": ["number", "null"] },
+    "max_available_at_ms": { "type": ["number", "null"] },
+    "sources": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+    "instruments": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+    "parameters": { "type": "object" }
+  },
+  "$defs": {
+    "input": {
+      "type": "object",
+      "required": ["transform_manifest_file", "transform_manifest_sha256", "transform_id"],
+      "properties": {
+        "transform_manifest_file": { "type": "string", "minLength": 1 },
+        "transform_manifest_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "transform_id": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["file", "sha256", "byte_count", "row_count"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "byte_count": { "type": "integer", "minimum": 1 },
+        "row_count": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

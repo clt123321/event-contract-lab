@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/replay-frame.v1.schema.json",
+  "title": "ReplayFrame v1",
+  "type": "object",
+  "required": ["schema_version", "replay_sequence", "virtual_time_ms", "elapsed_virtual_ms", "event"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "replay_sequence": { "type": "integer", "minimum": 0 },
+    "virtual_time_ms": { "type": "number" },
+    "elapsed_virtual_ms": { "type": "number", "minimum": 0 },
+    "event": { "$ref": "canonical-market-event.v1.schema.json" }
+  },
+  "additionalProperties": false
+}

@@ -65,18 +65,19 @@ Agent 运维和审计。
 - `FR-203 IMPLEMENTED LOCAL`：建立 trade、book snapshot、book delta、BBO、reference price
   事实表；当前 Canonical v1 已覆盖前四类，reference price 专用事实仍待实现。
 - `FR-204`：建立 source connection、latency sample、data quality 事实表。
-- `FR-205`：支持 NDJSON/Parquet 冷存储和 ClickHouse 热查询。
+- `FR-205 PARTIAL`：NDJSON 和确定性 ZSTD Parquet 本地存储已实现；R2 冷归档与 ClickHouse 热查询待完成。
 - `FR-206 IMPLEMENTED LOCAL`：隔离无效时间戳、重复、序列回退、BBO/完整快照交叉、
   概率越界和不可解析 book；warning 与 quarantine 均有版本化计数。
 - `FR-207`：数据分为 Raw/Bronze、Canonical/Silver、Serving/Gold，后两层均可由上游重建。
-- `FR-208 PARTIAL`：已建立逐行 Raw→canonical lineage 和 transform manifest；dataset
-  manifest 与 Gold lineage 在 P2 完成。
+- `FR-208 PARTIAL`：已建立逐行 Raw→canonical lineage、transform manifest 和 Dataset
+  Manifest v2；Gold lineage 与多分区 dataset registry 在 P2 完成。
 
 验收：任意事实行可回溯到原始事件；同一批数据重复转换结果一致。
 
 ### FR-300 回放与研究
 
-- `FR-301`：按 monotonic/源事件顺序回放多源事件。
+- `FR-301 IMPLEMENTED LOCAL`：按 `available_at_ms` 做 point-in-time 回放，用
+  source/session/monotonic/event ID 稳定解决同时刻顺序。
 - `FR-302`：模拟费用、结算、盘口冲击、延迟、队列和部分成交。
 - `FR-303`：支持 train/validation/test 时间切分和参数实验记录。
 - `FR-304`：报告容量、换手、滑点敏感性和统计可信度。
@@ -166,9 +167,9 @@ Agent 运维和审计。
 | 阶段 | 交付物 | 当前判断 |
 |---|---|---|
 | M0 探索与契约 | 源清单、原始 envelope、网络与时钟诊断 | 基本完成 |
-| M1 数据链路与模型 | 双 venue 只读、WAL、Parquet、质量报告、canonical schema | 进行中：Parquet/归档待完成 |
+| M1 数据链路与模型 | 双 venue 只读、WAL、Parquet、质量报告、canonical schema | 进行中：本地闭环已通，多分区/R2/24h soak 待完成 |
 | M2 数仓与数据集 | Bronze/Silver/Gold、ClickHouse、manifest、lineage、恢复 | 等 24h 样本定 DDL |
-| M3 研究与回放 | 冻结数据集、point-in-time、replay、费用/结算、黄金夹具 | 可先建接口 |
+| M3 研究与回放 | 冻结数据集、point-in-time、replay、费用/结算、黄金夹具 | 部分完成：冻结/调度/黄金夹具已通，执行现实性待实现 |
 | M4 Paper OMS | 双 venue adapter 接口、订单状态机、模拟执行 | 不启用主网写 |
 | M5 DFX/控制面强化 | CI、安全、Agent、IaC、SLO、恢复和审计 | 从 M1 贯穿实施 |
 | M6 实盘门禁 | KMS、风控、对账、canary | 当前禁止进入 |

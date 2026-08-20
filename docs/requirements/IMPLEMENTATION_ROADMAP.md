@@ -1,6 +1,6 @@
 # 实施路线图：数据优先、研究后置、DFX 贯穿
 
-版本：v0.2｜更新时间：2026-08-20｜状态：Approved / Local-first amended
+版本：v0.3｜更新时间：2026-08-20｜状态：Approved / Local-first amended
 
 ## 1. 总体顺序
 
@@ -24,8 +24,9 @@ flowchart LR
 云时钟和 IaC 实机验证外，契约、WAL、canonical、质量规则、回放、paper OMS、故障注入、
 部署预检和上线验证器均优先在本地完成。
 
-当前本地增量：Raw/WAL 之后的 Canonical Silver v1、quality policy、quarantine、逐行 lineage、
-确定性 transform manifest 和 ClickHouse 候选 DDL 已实现；Parquet、对象归档和 replay 是下一批。
+当前本地增量：Raw/WAL、Canonical Silver v1、quality/quarantine、逐行 lineage、
+确定性 Parquet、Dataset Manifest v2 和 point-in-time Replay v1 已实现并进入统一验证。
+下一批本地工作是 24h soak、多 segment 数据集、部署 artifact/IaC、空库恢复和 paper replay consumer。
 
 ### 本地发布候选门禁 L3
 
@@ -33,8 +34,8 @@ flowchart LR
 - `make verify-release` 必须在 clean commit 上通过；
 - 输出版本化阈值下的机器可读 `report.json` 和逐步骤日志；
 - 同一验证器的 `host-smoke` 模式作为未来云节点部署后的第一条命令；
-- L3 是最低发布门禁，不再自动触发云申请；Parquet、回放夹具和部署 artifact/IaC 评审完成后
-  才创建 AWS 账号/短期实例，不提前购买 EBS、R2 或长期承诺。
+- L3 是最低发布门禁，不再自动触发云申请；在已完成 Parquet/回放的基础上，
+  继续通过本地 24h soak、故障演练和部署 artifact/IaC 评审，才创建 AWS 账号/短期实例。
 
 目标 venue 是 Predict.fun 和 Polymarket；Binance 是第一参考价源。两者先完成公开或
 授权只读数据，execution adapter 可以定义接口但默认禁用。Polymarket 未发现官方公开
@@ -195,7 +196,8 @@ DFX 是 `Design for X`：从设计阶段保证系统不仅“能跑”，还容�
 | Polymarket Gamma/Data/CLOB read + Market WS | 是 | 固定市场清单 |
 | Predict.fun Testnet/read-only client | 是 | 官方工单回复与 key |
 | Binance 参考源 | 是 | 选择标的，默认 BTCUSDT/ETHUSDT |
-| WAL/Parquet/R2/manifest/质量检查 | 是 | 云账号、保留期审批 |
+| WAL/Parquet/manifest/质量检查 | 是，本地闭环已实现 | quality mask 和保留期审批 |
+| R2 对象归档 | 账号到位后自动部署 | 云账号、供应商和保留期审批 |
 | 数据模型、候选 DDL、回放和研究框架 | 是 | 跨 venue 映射歧义审核 |
 | CI、测试、观测、IaC 和恢复工具 | 是 | 云部署角色、告警接收人 |
 | Polymarket/Predict 主网写接口 | 否 | 资格、条款、钱包、限额、风险审批 |

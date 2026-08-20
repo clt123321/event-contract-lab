@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/replay-config.v1.schema.json",
+  "title": "ReplayConfig v1",
+  "type": "object",
+  "required": ["schema_version", "config_version", "random_seed", "maximum_events"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "config_version": { "type": "string", "minLength": 1 },
+    "random_seed": { "type": "integer", "minimum": 0 },
+    "maximum_events": { "type": ["integer", "null"], "minimum": 1 }
+  },
+  "additionalProperties": false
+}

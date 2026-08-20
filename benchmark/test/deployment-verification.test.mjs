@@ -5,7 +5,9 @@ import {
   compareReports,
   evaluateCaptureSummary,
   evaluateClock,
+  evaluateDatasetReplay,
   evaluateHostNormalization,
+  evaluateHostDatasetReplay,
   evaluateNetwork,
   evaluateNormalization,
   evaluateWalImport,
@@ -68,6 +70,42 @@ test("host normalization enforces canonical volume and quarantine ratio", () => 
   assert.equal(overallStatus(evaluateHostNormalization(
     { status: "normalized" }, quality, manifest, profile, "commit",
   )), "failed");
+});
+
+test("dataset and replay checks bind rows, hashes, IDs and code", () => {
+  const profile = {
+    dataset_input_rows: 2,
+    dataset_included_rows: 1,
+    dataset_excluded_rows: 1,
+    replay_event_rows: 1,
+  };
+  const dataset = {
+    dataset_id: "dataset",
+    input_rows: 2,
+    included_rows: 1,
+    excluded_rows: 1,
+    code_commit: "commit",
+    parquet_files: [{ sha256: "a".repeat(64) }],
+  };
+  const replay = {
+    dataset_id: "dataset",
+    event_count: 1,
+    output: { row_count: 1 },
+    code_commit: "commit",
+  };
+  assert.equal(overallStatus(evaluateDatasetReplay(
+    { status: "frozen" }, dataset, { status: "replayed" }, replay, profile, "commit",
+  )), "passed");
+});
+
+test("host dataset/replay requires nonempty point-in-time output", () => {
+  const dataset = {
+    dataset_id: "dataset", input_rows: 10, included_rows: 8, excluded_rows: 2, code_commit: "commit",
+  };
+  const replay = { dataset_id: "dataset", event_count: 8, output: { row_count: 8 } };
+  assert.equal(overallStatus(evaluateHostDatasetReplay(
+    { status: "frozen" }, dataset, { status: "replayed" }, replay, "commit",
+  )), "passed");
 });
 
 test("capture evaluation requires both sources and no silent parser errors", () => {

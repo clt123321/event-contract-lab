@@ -10,7 +10,9 @@ import {
   check,
   evaluateCaptureSummary,
   evaluateClock,
+  evaluateDatasetReplay,
   evaluateHostNormalization,
+  evaluateHostDatasetReplay,
   evaluateNetwork,
   evaluateNormalization,
   evaluateRuntime,
@@ -157,6 +159,8 @@ async function runtimeChecks() {
 async function ensureToolBinaries() {
   const suffix = process.platform === "win32" ? ".exe" : "";
   const binaries = {
+    dataset: join(repositoryRoot, "target", "debug", `dataset-cli${suffix}`),
+    replay: join(repositoryRoot, "target", "debug", `replay-cli${suffix}`),
     wal: join(repositoryRoot, "target", "debug", `wal-cli${suffix}`),
     normalize: join(repositoryRoot, "target", "debug", `normalize-cli${suffix}`),
   };
@@ -164,7 +168,8 @@ async function ensureToolBinaries() {
     await Promise.all(Object.values(binaries).map((binary) => access(binary)));
   } else {
     await runStep("tool-build", "cargo", [
-      "build", "--locked", "-p", "wal-cli", "-p", "normalize-cli",
+      "build", "--locked",
+      "-p", "wal-cli", "-p", "normalize-cli", "-p", "dataset-cli", "-p", "replay-cli",
     ]);
   }
   return binaries;
@@ -221,6 +226,37 @@ async function runLocalVerification(binaries, git) {
       skippedRows: profile.local.normalization_skipped_rows,
       warningRows: profile.local.normalization_warning_rows,
     },
+    git.commit,
+  ));
+
+  const datasetDirectory = join(outputDirectory, "dataset");
+  const parquetPath = join(datasetDirectory, "canonical.parquet");
+  const datasetManifestPath = join(datasetDirectory, "dataset-manifest.json");
+  const datasetStep = await runStep("fixture-dataset", binaries.dataset, [
+    "build",
+    "--transform-manifest", manifestPath,
+    "--quality-mask", join(repositoryRoot, "config/quality-mask.strict-v1.json"),
+    "--parquet", parquetPath,
+    "--manifest", datasetManifestPath,
+    "--git-commit", git.commit,
+  ]);
+  const replayDirectory = join(outputDirectory, "replay");
+  const replayPath = join(replayDirectory, "replay.ndjson");
+  const replayManifestPath = join(replayDirectory, "replay-manifest.json");
+  const replayStep = await runStep("fixture-replay", binaries.replay, [
+    "run",
+    "--dataset-manifest", datasetManifestPath,
+    "--config", join(repositoryRoot, "config/replay.v1.json"),
+    "--output", replayPath,
+    "--manifest", replayManifestPath,
+    "--git-commit", git.commit,
+  ]);
+  checks.push(...evaluateDatasetReplay(
+    parseJsonOutput(datasetStep),
+    JSON.parse(await readFile(datasetManifestPath, "utf8")),
+    parseJsonOutput(replayStep),
+    JSON.parse(await readFile(replayManifestPath, "utf8")),
+    profile.local,
     git.commit,
   ));
 }
@@ -316,8 +352,39 @@ async function runHostSmoke(binaries, git) {
           hostProfile,
           git.commit,
         ));
+        const hostDatasetDirectory = join(outputDirectory, "dataset");
+        const hostDatasetManifest = join(hostDatasetDirectory, "dataset-manifest.json");
+        const hostDatasetStep = await runStep("capture-dataset", binaries.dataset, [
+          "build",
+          "--transform-manifest", transformManifestPath,
+          "--quality-mask", join(repositoryRoot, "config/quality-mask.strict-v1.json"),
+          "--parquet", join(hostDatasetDirectory, "canonical.parquet"),
+          "--manifest", hostDatasetManifest,
+          "--git-commit", git.commit,
+        ], { required: false, severity: "error" });
+        if (hostDatasetStep.exit_code === 0) {
+          const hostReplayDirectory = join(outputDirectory, "replay");
+          const hostReplayManifest = join(hostReplayDirectory, "replay-manifest.json");
+          const hostReplayStep = await runStep("capture-replay", binaries.replay, [
+            "run",
+            "--dataset-manifest", hostDatasetManifest,
+            "--config", join(repositoryRoot, "config/replay.v1.json"),
+            "--output", join(hostReplayDirectory, "replay.ndjson"),
+            "--manifest", hostReplayManifest,
+            "--git-commit", git.commit,
+          ], { required: false, severity: "error" });
+          if (hostReplayStep.exit_code === 0) {
+            checks.push(...evaluateHostDatasetReplay(
+              parseJsonOutput(hostDatasetStep),
+              JSON.parse(await readFile(hostDatasetManifest, "utf8")),
+              parseJsonOutput(hostReplayStep),
+              JSON.parse(await readFile(hostReplayManifest, "utf8")),
+              git.commit,
+            ));
+          }
+        }
       } catch (error) {
-        checks.push(check("host_normalization.report_json", false, String(error.message), "valid JSON"));
+        checks.push(check("host_pipeline.report_json", false, String(error.message), "valid JSON"));
       }
     }
     if (summaryStep.exit_code === 0) {

@@ -42,7 +42,7 @@ console.log(JSON.stringify({
   public_local_development_ready: binanceSymbols.length >= 2,
   formal_three_source_benchmark_ready: !blockers.some((item) => item.gate === "P0"),
   cloud_application_recommended_now: false,
-  next_engineering_gate: "deterministic Parquet export on Canonical Silver v1, then replay fixture",
+  next_engineering_gate: "local 24h soak, deploy artifact/IaC review, then empty-ClickHouse recovery and paper replay consumer",
   cloud_deployment_ready: false,
   live_execution_enabled: config.execution?.live_enabled === true,
   blockers,

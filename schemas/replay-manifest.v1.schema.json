@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/replay-manifest.v1.schema.json",
+  "title": "ReplayManifest v1",
+  "type": "object",
+  "required": [
+    "schema_version", "replay_id", "replay_engine_version", "dataset_manifest_file",
+    "dataset_manifest_sha256", "dataset_id", "replay_config_version", "replay_config_sha256",
+    "code_commit", "random_seed", "event_count", "first_virtual_time_ms",
+    "last_virtual_time_ms", "output"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "replay_id": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "replay_engine_version": { "type": "string", "minLength": 1 },
+    "dataset_manifest_file": { "type": "string", "minLength": 1 },
+    "dataset_manifest_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "dataset_id": { "type": "string", "minLength": 1 },
+    "replay_config_version": { "type": "string", "minLength": 1 },
+    "replay_config_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "code_commit": { "type": "string", "minLength": 1 },
+    "random_seed": { "type": "integer", "minimum": 0 },
+    "event_count": { "type": "integer", "minimum": 1 },
+    "first_virtual_time_ms": { "type": ["string", "null"] },
+    "last_virtual_time_ms": { "type": ["string", "null"] },
+    "output": { "$ref": "#/$defs/artifact" }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": ["file", "sha256", "byte_count", "row_count"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "byte_count": { "type": "integer", "minimum": 1 },
+        "row_count": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

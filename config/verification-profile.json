@@ -9,7 +9,11 @@
     "normalization_canonical_rows": 2,
     "normalization_quarantined_rows": 4,
     "normalization_skipped_rows": 0,
-    "normalization_warning_rows": 1
+    "normalization_warning_rows": 1,
+    "dataset_input_rows": 2,
+    "dataset_included_rows": 1,
+    "dataset_excluded_rows": 1,
+    "replay_event_rows": 1
   },
   "host_smoke": {
     "duration_seconds": 30,

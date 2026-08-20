@@ -1,6 +1,6 @@
 # Canonical Silver 数据模型 v1
 
-版本：v0.1｜更新时间：2026-08-20｜状态：Implemented locally / Parquet pending
+版本：v0.2｜更新时间：2026-08-20｜状态：Implemented locally
 
 ## 1. 边界
 
@@ -78,4 +78,5 @@ make normalize \
 quarantine、quality policy、quality report、normalizer version 和 Git commit。
 
 `schemas/clickhouse/canonical_market_event_v1.sql` 是候选 DDL，不表示 ClickHouse 已部署。
-Parquet writer 下一阶段复用同一 canonical schema、quality policy 和 transform identity。
+Parquet v1 和 Dataset Manifest v2 已复用同一 canonical schema、quality policy 和
+transform identity，详见 [`DATASET_AND_REPLAY.md`](DATASET_AND_REPLAY.md)。

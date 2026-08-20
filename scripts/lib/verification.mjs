@@ -139,6 +139,51 @@ export function evaluateHostNormalization(result, quality, manifest, profile, gi
   ];
 }
 
+export function evaluateDatasetReplay(datasetResult, dataset, replayResult, replay, profile, gitCommit) {
+  return [
+    check("dataset.status", datasetResult?.status === "frozen", datasetResult?.status, "frozen"),
+    check("dataset.input_rows", dataset?.input_rows === profile.dataset_input_rows, dataset?.input_rows, profile.dataset_input_rows),
+    check("dataset.included_rows", dataset?.included_rows === profile.dataset_included_rows, dataset?.included_rows, profile.dataset_included_rows),
+    check("dataset.excluded_rows", dataset?.excluded_rows === profile.dataset_excluded_rows, dataset?.excluded_rows, profile.dataset_excluded_rows),
+    check(
+      "dataset.row_balance",
+      Number(dataset?.included_rows ?? 0) + Number(dataset?.excluded_rows ?? 0) === dataset?.input_rows,
+      Number(dataset?.included_rows ?? 0) + Number(dataset?.excluded_rows ?? 0),
+      dataset?.input_rows,
+    ),
+    check("dataset.code_commit", dataset?.code_commit === gitCommit, dataset?.code_commit, gitCommit),
+    check(
+      "dataset.parquet_sha256",
+      /^[a-f0-9]{64}$/.test(String(dataset?.parquet_files?.[0]?.sha256 ?? "")),
+      dataset?.parquet_files?.[0]?.sha256,
+      "64 lowercase hex characters",
+    ),
+    check("replay.status", replayResult?.status === "replayed", replayResult?.status, "replayed"),
+    check("replay.dataset_binding", replay?.dataset_id === dataset?.dataset_id, replay?.dataset_id, dataset?.dataset_id),
+    check("replay.event_count", replay?.event_count === profile.replay_event_rows, replay?.event_count, profile.replay_event_rows),
+    check("replay.output_rows", replay?.output?.row_count === replay?.event_count, replay?.output?.row_count, replay?.event_count),
+    check("replay.code_commit", replay?.code_commit === gitCommit, replay?.code_commit, gitCommit),
+  ];
+}
+
+export function evaluateHostDatasetReplay(datasetResult, dataset, replayResult, replay, gitCommit) {
+  return [
+    check("host_dataset.status", datasetResult?.status === "frozen", datasetResult?.status, "frozen"),
+    check("host_dataset.nonempty", dataset?.included_rows > 0, dataset?.included_rows, "> 0"),
+    check(
+      "host_dataset.row_balance",
+      Number(dataset?.included_rows ?? 0) + Number(dataset?.excluded_rows ?? 0) === dataset?.input_rows,
+      Number(dataset?.included_rows ?? 0) + Number(dataset?.excluded_rows ?? 0),
+      dataset?.input_rows,
+    ),
+    check("host_dataset.code_commit", dataset?.code_commit === gitCommit, dataset?.code_commit, gitCommit),
+    check("host_replay.status", replayResult?.status === "replayed", replayResult?.status, "replayed"),
+    check("host_replay.dataset_binding", replay?.dataset_id === dataset?.dataset_id, replay?.dataset_id, dataset?.dataset_id),
+    check("host_replay.event_count", replay?.event_count === dataset?.included_rows, replay?.event_count, dataset?.included_rows),
+    check("host_replay.output_rows", replay?.output?.row_count === replay?.event_count, replay?.output?.row_count, replay?.event_count),
+  ];
+}
+
 export function evaluateClock(clockReport, profile) {
   const offset = clockReport?.recommendedClockOffsetMs;
   return [

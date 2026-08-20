@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := check
 
-.PHONY: bootstrap check safety readiness verify-local verify-release verify-host compare-verify rust-check rust-test node-test format format-check wal-import wal-verify normalize
+.PHONY: bootstrap check safety readiness verify-local verify-release verify-host compare-verify rust-check rust-test node-test format format-check wal-import wal-verify normalize dataset replay
 
 bootstrap:
 	npm --prefix benchmark ci
@@ -66,4 +66,26 @@ normalize:
 		--quality-report "$(OUTPUT_DIR)/quality.json" \
 		--manifest "$(OUTPUT_DIR)/transform-manifest.json" \
 		--quality-policy config/quality-policy.v1.json \
+		--git-commit "$$(git rev-parse --verify HEAD)"
+
+# Usage: make dataset TRANSFORM_MANIFEST=data/silver/<run>/transform-manifest.json OUTPUT_DIR=data/datasets/<id>
+dataset:
+	test -n "$(TRANSFORM_MANIFEST)"
+	test -n "$(OUTPUT_DIR)"
+	cargo run --locked -p dataset-cli -- build \
+		--transform-manifest "$(TRANSFORM_MANIFEST)" \
+		--quality-mask config/quality-mask.strict-v1.json \
+		--parquet "$(OUTPUT_DIR)/canonical.parquet" \
+		--manifest "$(OUTPUT_DIR)/dataset-manifest.json" \
+		--git-commit "$$(git rev-parse --verify HEAD)"
+
+# Usage: make replay DATASET_MANIFEST=data/datasets/<id>/dataset-manifest.json OUTPUT_DIR=data/replays/<id>
+replay:
+	test -n "$(DATASET_MANIFEST)"
+	test -n "$(OUTPUT_DIR)"
+	cargo run --locked -p replay-cli -- run \
+		--dataset-manifest "$(DATASET_MANIFEST)" \
+		--config config/replay.v1.json \
+		--output "$(OUTPUT_DIR)/replay.ndjson" \
+		--manifest "$(OUTPUT_DIR)/replay-manifest.json" \
 		--git-commit "$$(git rev-parse --verify HEAD)"

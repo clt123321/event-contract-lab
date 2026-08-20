@@ -18,8 +18,8 @@
 - 已恢复 SignalX 可观察的控制面/API 边界和推断部署拓扑。
 - Predict.fun 与 Polymarket 已确认为双目标 venue，第一期仅推进公开/授权只读数据链路。
 - Binance 固定 BTCUSDT/ETHUSDT；Predict.fun 与 Polymarket 的正式市场 ID 仍等待人工/外部冻结。
-- Raw → WAL → seal/verify → canonical/quality 已可本地运行；Parquet/R2、ClickHouse 实例和
-  replay 尚未完成。
+- Raw → WAL → canonical/quality → deterministic Parquet → Dataset Manifest v2 → point-in-time
+  replay 已可本地运行；R2、ClickHouse 实例和 paper OMS 尚未完成。
 - 大规模服务器部署和实盘执行仍受开发门禁约束。
 
 ## 文档入口
@@ -56,6 +56,10 @@ cargo run --locked -p wal-cli -- verify --wal-dir data/wal
 
 # 对 sealed Raw segment 生成 Silver、quarantine、质量报告和转换 manifest
 make normalize INPUT=data/wal/<segment>.ndjson OUTPUT_DIR=data/silver/<unique-run-id>
+make dataset TRANSFORM_MANIFEST=data/silver/<run>/transform-manifest.json \
+  OUTPUT_DIR=data/datasets/<unique-run-id>
+make replay DATASET_MANIFEST=data/datasets/<run>/dataset-manifest.json \
+  OUTPUT_DIR=data/replays/<unique-run-id>
 ```
 
 公共源实采仍从现有 Node 工具进入；输出可直接交给同一个 WAL：
@@ -84,8 +88,11 @@ make wal-import INPUT=benchmark/data/raw/<capture>.ndjson
 | `crates/event-contracts` | Raw、market mapping、segment/dataset manifest 契约 |
 | `crates/collector-core` | 单写者分段 WAL、崩溃尾部隔离、seal/verify |
 | `crates/normalizer-core` | Raw→Silver 映射、质量规则、lineage 与 quarantine |
+| `crates/dataset-core` | Canonical Parquet、质量掩码、Dataset Manifest v2 与回读校验 |
+| `crates/replay-core` | point-in-time 排序、虚拟时钟、确定性 replay manifest |
 | `apps/wal-cli` | NDJSON 导入、恢复和校验命令 |
 | `apps/normalize-cli` | 确定性 canonical 转换与 transform manifest |
+| `apps/dataset-cli`, `apps/replay-cli` | 冻结数据集与黄金回放命令 |
 | `schemas/`, `config/` | 不可重解释的 schema 与人工审批市场范围 |
 | `replay/`, `execution/`, `control/`, `research/` | P2/P3 模块边界；尚未宣称已实现 |
 | `infra/` | G2 IaC 边界；当前不会创建云资源 |

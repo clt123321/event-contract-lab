@@ -1,6 +1,6 @@
 # 本地优先与部署后验证手册
 
-版本：v0.1｜更新时间：2026-08-20｜适用范围：只读数据链路
+版本：v0.2｜更新时间：2026-08-20｜适用范围：只读数据链路
 
 ## 1. 原则与次序
 
@@ -30,8 +30,15 @@ make verify-local
 ```
 
 它会检查 Node/磁盘、Git 状态、live safety、Rust fmt/Clippy/test、Node test，并构建
-`wal-cli` 和 `normalize-cli`，最后用 synthetic fixture 跑通 Raw → segment → manifest →
-checksum verify，以及 Raw → canonical → quality/quarantine → transform manifest。
+`wal-cli`、`normalize-cli`、`dataset-cli` 和 `replay-cli`。最后用 synthetic fixture 跑通：
+
+```text
+Raw → WAL/segment manifest/checksum verify
+    → Canonical Silver/quality/quarantine/transform manifest
+    → strict quality mask/ZSTD Parquet/Dataset Manifest v2
+    → point-in-time replay/Replay Manifest v1
+```
+
 工作区有未提交修改时报告为 `warning`，便于开发中持续运行。
 
 准备发布候选时：
@@ -45,7 +52,7 @@ make verify-release
 
 - `report.json`：机器可读总结果、阈值、commit、主机信息和每项检查；
 - `logs/*.stdout.log`、`logs/*.stderr.log`：每一步的原始诊断；
-- `wal/`：本次验证产生的 segment 和 manifest。
+- `wal/`、`silver/`、`dataset/`、`replay/`：本次验证的分层 artifact 与 manifest。
 
 正式发布报告不提交 Git；需要保留时将整个目录作为 CI artifact 或运维证据归档。
 
@@ -66,6 +73,7 @@ make verify-host
 5. 延迟、重连、解析错误、断序 summary；
 6. 实采 NDJSON 导入 WAL 并核对 checksum/行数。
 7. 同一份实采数据转为 Canonical Silver，并检查行数守恒、lineage 和 quarantine 比例。
+8. 使用 strict mask 冻结非空 Parquet dataset，再完整 replay，核对 dataset/output hash 和行数。
 
 调整时长或网络参数不需要改代码：
 
@@ -90,6 +98,8 @@ make verify-host VERIFY_ARGS="--duration 120 --dns doh --symbol ETHUSDT --polyma
 | `capture.source.*` | 订阅 ID、心跳、市场活跃度 | 使用已批准 ID；延长 smoke；查看 capture 日志 |
 | `capture.parse_errors` | schema drift、源 payload | 保存脱敏 fixture、隔离数据、升级 parser |
 | `wal.*` | 权限、空间、锁、checksum | 停止第二写者；恢复磁盘；从 manifest 复核 |
+| `dataset.*` | quality mask、输入/Parquet hash、非空行数 | 保留原 artifact；更正上游或新建 mask 版本；不手改 manifest |
+| `replay.*` | dataset/config/commit 绑定、时间序、output hash | 用全新目录重放；对比 manifest；不覆盖旧证据 |
 
 每次调整都创建新的 run directory，旧报告不覆盖。比较前后报告的 commit、参数和主机信息；
 禁止直接编辑失败报告改成通过。
@@ -110,7 +120,8 @@ make compare-verify \
 满足以下条件后再申请 14 天短期节点：
 
 - `make verify-release` 状态为 `passed`；
-- 本地故障/恢复测试覆盖重启、partial tail、checksum 篡改和双写者冲突；
+- 本地故障/恢复测试覆盖重启、partial tail、checksum 篡改、Parquet 篡改和双写者冲突；
+- 本地 24h soak 的断流、质量、吞吐和磁盘外推报告已人工审核；
 - 目标市场配置、验证阈值、部署 artifact/commit 已冻结；
 - Terraform/部署脚本可以重复创建与销毁，不依赖手工改机器；
 - AWS 账号、最小权限角色、预算告警接收人和 `$150` 硬上限明确；

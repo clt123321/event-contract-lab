@@ -45,9 +45,11 @@ WAL；live adapter 即使存在，也必须由风险门禁和独立配置显式�
 | Agent Control | 注册、版本、不可变配置、任务和健康状态 | control API + audit trail |
 | Observability | 统一 correlation ID、指标、日志、trace 和告警 | dashboards + alerts |
 
-Collector Raw/WAL 和 Normalizer 的首个本地实现已经落地；Archive、ClickHouse、Replay、OMS
-及控制面仍是目标架构，不应从图中误读为已部署。Canonical 字段与质量处置见
-[`CANONICAL_DATA_MODEL.md`](CANONICAL_DATA_MODEL.md)。
+Collector Raw/WAL、Normalizer、单输入 Parquet/Dataset 冻结和 point-in-time Replay v1
+已有本地实现；R2、ClickHouse、回放消费者、OMS 及控制面仍是目标架构，不应
+从图中误读为已部署。Canonical 字段与质量处置见
+[`CANONICAL_DATA_MODEL.md`](CANONICAL_DATA_MODEL.md)，数据集和回放契约见
+[`DATASET_AND_REPLAY.md`](DATASET_AND_REPLAY.md)。
 
 ## 3. 时间与数据语义
 
@@ -69,12 +71,15 @@ apps/
   console/               # 运维与研究控制台
   wal-cli/               # Raw segment 工具
   normalize-cli/         # 本地 Silver 转换工具
+  dataset-cli/           # 质量掩码、Parquet 与冻结数据集
+  replay-cli/            # 确定性 point-in-time 回放
 crates/
   event-contracts/       # canonical schema 与版本兼容
   collector-core/        # 连接、WAL、状态机
   normalizer-core/       # Raw→Silver、quality、quarantine
   collectors/            # binance/predictfun/polymarket/chainlink/deribit
-  replay/                # 确定性事件调度与模拟
+  dataset-core/          # Parquet/Dataset Manifest 原语
+  replay-core/           # 确定性事件调度原语
   execution/             # OMS、venue adapter、paper/live
   risk-ledger/           # 风控、账本、对账
 services/

@@ -33,7 +33,7 @@ jobs:
       - run: cargo test --workspace --locked
       - run: npm --prefix benchmark test
       - run: npm --prefix benchmark audit --omit=dev --audit-level=high
-      - name: Raw to WAL and Canonical Silver integration
+      - name: Raw to WAL to Silver to Dataset to Replay integration
         run: |
           verification_dir="$(mktemp -d)/deployment-verification"
           node scripts/verify-deployment.mjs --mode local --skip-checks --require-clean --output "$verification_dir"

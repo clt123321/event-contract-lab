@@ -1,11 +1,11 @@
 # 开发与部署准备度
 
-版本：v0.3｜评估日期：2026-08-20
+版本：v0.4｜评估日期：2026-08-20
 结论：**可以开始开发大部分只读数据、回放、paper execution 和控制面骨架；尚不具备大规模生产部署和实盘准入条件。**
 
-云账号和服务器不是当前开发前置条件。当前基础 L3 已能生成 clean release 报告，但不会因此
-立即申请服务器；继续在本地完成 Parquet、回放夹具和部署 artifact/IaC 评审后，才申请
-14 天短期节点。
+云账号和服务器不是当前开发前置条件。Raw→WAL→Silver→Parquet→
+Dataset Manifest→Replay 的本地闭环已实现并纳入发布验证；继续完成 24h 本地
+soak、部署 artifact/IaC 评审和必要的故障演练后，才申请 14 天短期节点。
 
 ## 1. 当前可立即开发的范围
 
@@ -14,9 +14,9 @@
 | 公共行情采集器 | 高 | Binance、Polymarket 已跑通；Predict.fun Testnet/read-only 契约已确认，主网 key 待申请 |
 | 原始事件层 | 高 | envelope、时钟字段、不可变原始 payload 已确定 |
 | 数据质量与延迟报告 | 高 | 已有采集、网络/时钟诊断、Silver quality/quarantine 和汇总脚本 |
-| Parquet/R2 归档 | 中高 | 可先按日期/来源/流分区，生命周期和保留期待定 |
+| Parquet/R2 归档 | 高/中 | 单输入确定性 Parquet 已完成；多分区、R2 上传和生命周期待定 |
 | ClickHouse 模型 | 中 | 可建立候选 DDL；排序键、分区键需用 24h 样本验证 |
-| 事件回放引擎 | 中高 | 可先实现确定性调度、黄金夹具、费用与延迟注入 |
+| 事件回放引擎 | 高/中 | point-in-time 调度和黄金夹具已完成；费用、延迟、book state 和订单消费者待实现 |
 | Strategy SDK 与 paper OMS | 中 | 生命周期和状态机可开发；具体 venue 订单语义仍需正式契约 |
 | Agent/控制面/可观测性 | 中 | 注册、心跳、配置、日志、指标等通用部分可开发 |
 | live execution | 低/禁止 | 缺凭据治理、资格确认、风控、对账、kill switch 和 canary 审批 |
@@ -56,13 +56,14 @@
 - [x] synthetic Raw → WAL → manifest → checksum verify 纳入同一报告。
 - [x] synthetic Raw → Canonical Silver → quality/quarantine → transform manifest 纳入同一报告。
 - [x] 未来主机 `make verify-host` 复用同一报告格式，覆盖网络、时钟、公共行情和 WAL。
-- [ ] Parquet、回放黄金夹具和本地故障注入达到 P1/P2 目标。
+- [x] 确定性 Parquet、Dataset Manifest v2 和 point-in-time 回放黄金夹具纳入 CI/本地验证。
+- [ ] 本地长时 soak、磁盘满/下游不可用等故障注入达到 P1/P2 目标。
 - [ ] IaC plan、部署 artifact、版本/回滚策略在不创建云资源的情况下完成评审。
 
 ### G2：服务器部署门禁（本地数据/回放候选后）
 
-- [ ] L3 clean release、Parquet、回放夹具和部署 artifact/IaC 评审均通过，然后再申请
-  云账号和服务器。
+- [ ] L3 clean release、本地 24h soak、必要故障演练和部署 artifact/IaC 评审均通过，
+  然后再申请云账号和服务器。
 - [ ] 云账号、预算、账单告警和资源负责人明确。
 - [x] 首轮 14 天预算上限 $150 已批准；长期资源和 1 年承诺未被提前购买。
 - [ ] 东京节点完成不少于 24 小时的只读连续 benchmark；Polymarket execution 必须
@@ -129,11 +130,14 @@
   → CanonicalMarketEvent v1
   → quality flags / quarantine
   → 输入与输出 checksum 绑定的 transform manifest
+  → versioned quality mask → deterministic ZSTD Parquet
+  → Dataset Manifest v2 → point-in-time Replay v1
 ```
 
 进程重启时，完整 NDJSON 行会被恢复并封存；未完成的尾部字节会原样进入 quarantine，
-不会伪装成有效事件或静默丢弃。此闭环是本地实现证据，不等同于 G2 的 24h soak、磁盘满、
-R2 回补或空 ClickHouse 恢复已经通过。Canonical v1 当前覆盖 Binance trade/BBO/depth 与
+不会伪装成有效事件或静默丢弃。数据集生成会校验输入和 Parquet，回放只按事件当时
+已可见的 `available_at_ms` 调度。此闭环是本地实现证据，不等同于 G2 的 24h soak、
+磁盘满、R2 回补或空 ClickHouse 恢复已经通过。Canonical v1 当前覆盖 Binance trade/BBO/depth 与
 Polymarket trade/BBO/book/price change；未支持类型明确隔离，不能降级为含义不明的 Silver 行。
 
 资源规格、三阶段采购上限和年度现金需求见

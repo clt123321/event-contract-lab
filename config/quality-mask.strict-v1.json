@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "mask_version": "research-strict-v1",
+  "exclude_unlisted_flags": true,
+  "allowed_flags": []
+}
