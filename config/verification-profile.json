@@ -4,13 +4,20 @@
     "minimum_node_major": 22,
     "minimum_free_disk_mib": 1024,
     "fixture_rows": 2,
-    "fixture_segment_bytes": 512
+    "fixture_segment_bytes": 512,
+    "normalization_fixture_rows": 6,
+    "normalization_canonical_rows": 2,
+    "normalization_quarantined_rows": 4,
+    "normalization_skipped_rows": 0,
+    "normalization_warning_rows": 1
   },
   "host_smoke": {
     "duration_seconds": 30,
     "clock_samples": 5,
     "network_timeout_ms": 8000,
     "minimum_capture_rows": 10,
+    "minimum_canonical_rows": 10,
+    "maximum_quarantine_ratio": 0.01,
     "maximum_invalid_json": 0,
     "maximum_connection_errors": 0,
     "maximum_parse_errors": 0,

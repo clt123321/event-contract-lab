@@ -3,8 +3,9 @@
 版本：v0.3｜评估日期：2026-08-20
 结论：**可以开始开发大部分只读数据、回放、paper execution 和控制面骨架；尚不具备大规模生产部署和实盘准入条件。**
 
-云账号和服务器不是当前开发前置条件。先在本地完成可重现发布候选与部署后验证器，
-通过 L3 后再申请 14 天短期节点。
+云账号和服务器不是当前开发前置条件。当前基础 L3 已能生成 clean release 报告，但不会因此
+立即申请服务器；继续在本地完成 Parquet、回放夹具和部署 artifact/IaC 评审后，才申请
+14 天短期节点。
 
 ## 1. 当前可立即开发的范围
 
@@ -12,7 +13,7 @@
 |---|---:|---|
 | 公共行情采集器 | 高 | Binance、Polymarket 已跑通；Predict.fun Testnet/read-only 契约已确认，主网 key 待申请 |
 | 原始事件层 | 高 | envelope、时钟字段、不可变原始 payload 已确定 |
-| 数据质量与延迟报告 | 高 | 已有采集、网络诊断、时钟探针和汇总脚本 |
+| 数据质量与延迟报告 | 高 | 已有采集、网络/时钟诊断、Silver quality/quarantine 和汇总脚本 |
 | Parquet/R2 归档 | 中高 | 可先按日期/来源/流分区，生命周期和保留期待定 |
 | ClickHouse 模型 | 中 | 可建立候选 DDL；排序键、分区键需用 24h 样本验证 |
 | 事件回放引擎 | 中高 | 可先实现确定性调度、黄金夹具、费用与延迟注入 |
@@ -53,13 +54,15 @@
 - [x] `make verify-local` 可在 dirty worktree 中持续运行并明确给出 warning。
 - [x] `make verify-release` 要求 clean commit，失败以非零状态退出。
 - [x] synthetic Raw → WAL → manifest → checksum verify 纳入同一报告。
+- [x] synthetic Raw → Canonical Silver → quality/quarantine → transform manifest 纳入同一报告。
 - [x] 未来主机 `make verify-host` 复用同一报告格式，覆盖网络、时钟、公共行情和 WAL。
-- [ ] Parquet/canonical/质量隔离、回放黄金夹具和本地故障注入达到 P1/P2 目标。
+- [ ] Parquet、回放黄金夹具和本地故障注入达到 P1/P2 目标。
 - [ ] IaC plan、部署 artifact、版本/回滚策略在不创建云资源的情况下完成评审。
 
-### G2：服务器部署门禁（L3 后）
+### G2：服务器部署门禁（本地数据/回放候选后）
 
-- [ ] L3 clean release 报告状态为 `passed`，然后再申请云账号和服务器。
+- [ ] L3 clean release、Parquet、回放夹具和部署 artifact/IaC 评审均通过，然后再申请
+  云账号和服务器。
 - [ ] 云账号、预算、账单告警和资源负责人明确。
 - [x] 首轮 14 天预算上限 $150 已批准；长期资源和 1 年承诺未被提前购买。
 - [ ] 东京节点完成不少于 24 小时的只读连续 benchmark；Polymarket execution 必须
@@ -123,11 +126,15 @@
   → flush + fsync + 原子 seal
   → SHA-256/row/byte/time/source/stream manifest
   → 独立 verify
+  → CanonicalMarketEvent v1
+  → quality flags / quarantine
+  → 输入与输出 checksum 绑定的 transform manifest
 ```
 
 进程重启时，完整 NDJSON 行会被恢复并封存；未完成的尾部字节会原样进入 quarantine，
 不会伪装成有效事件或静默丢弃。此闭环是本地实现证据，不等同于 G2 的 24h soak、磁盘满、
-R2 回补或空 ClickHouse 恢复已经通过。
+R2 回补或空 ClickHouse 恢复已经通过。Canonical v1 当前覆盖 Binance trade/BBO/depth 与
+Polymarket trade/BBO/book/price change；未支持类型明确隔离，不能降级为含义不明的 Silver 行。
 
 资源规格、三阶段采购上限和年度现金需求见
 [`INFRASTRUCTURE_CAPACITY_AND_COST.md`](INFRASTRUCTURE_CAPACITY_AND_COST.md)。

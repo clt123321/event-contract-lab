@@ -7,8 +7,10 @@ use serde_json::Value;
 use thiserror::Error;
 
 pub const RAW_EVENT_SCHEMA_VERSION: u32 = 1;
+pub const CANONICAL_EVENT_SCHEMA_VERSION: u32 = 1;
 pub const SEGMENT_MANIFEST_SCHEMA_VERSION: u32 = 1;
 pub const DATASET_MANIFEST_SCHEMA_VERSION: u32 = 1;
+pub const TRANSFORM_MANIFEST_SCHEMA_VERSION: u32 = 1;
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum ContractError {
@@ -58,6 +60,87 @@ pub struct RawEventEnvelope {
     pub payload: Option<Value>,
     #[serde(flatten)]
     pub extra: BTreeMap<String, Value>,
+}
+
+/// Exact decimal strings are retained in Silver so venue prices and quantities are never rounded
+/// through a binary floating-point representation during normalization.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PriceLevel {
+    pub price: String,
+    pub quantity: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalEventKind {
+    Trade,
+    BestBidAsk,
+    BookSnapshot,
+    BookDelta,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RawLineage {
+    pub input_sha256: String,
+    pub line_number: u64,
+    pub raw_event_sha256: String,
+    pub raw_schema_version: u32,
+}
+
+/// Venue-neutral Silver event. A field is populated only when its source payload gives that
+/// meaning explicitly; normalization must not guess market or outcome semantics.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CanonicalMarketEvent {
+    pub schema_version: u32,
+    pub canonical_event_id: String,
+    pub event_kind: CanonicalEventKind,
+    pub source: String,
+    pub stream: String,
+    pub session_id: String,
+    pub instrument: String,
+    pub market_id: Option<String>,
+    pub outcome_id: Option<String>,
+    pub source_event_ts_ms: Option<f64>,
+    pub available_at_ms: f64,
+    pub recv_mono_ns: String,
+    pub sequence_start: Option<i64>,
+    pub sequence_end: Option<i64>,
+    pub price: Option<String>,
+    pub quantity: Option<String>,
+    pub best_bid: Option<String>,
+    pub best_ask: Option<String>,
+    #[serde(default)]
+    pub bids: Vec<PriceLevel>,
+    #[serde(default)]
+    pub asks: Vec<PriceLevel>,
+    #[serde(default)]
+    pub quality_flags: BTreeSet<String>,
+    pub lineage: RawLineage,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FileArtifact {
+    pub file: String,
+    pub sha256: String,
+    pub byte_count: u64,
+    pub row_count: u64,
+}
+
+/// Deterministic transform receipt. It intentionally contains no wall-clock creation timestamp,
+/// so the same inputs, policy and code identity produce byte-identical evidence.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TransformManifest {
+    pub schema_version: u32,
+    pub transform_id: String,
+    pub normalizer_version: String,
+    pub canonical_schema_version: u32,
+    pub quality_policy_version: String,
+    pub quality_policy_sha256: String,
+    pub code_commit: String,
+    pub input: FileArtifact,
+    pub canonical_output: FileArtifact,
+    pub quarantine_output: FileArtifact,
+    pub quality_report: FileArtifact,
 }
 
 impl RawEventEnvelope {

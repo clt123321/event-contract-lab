@@ -36,6 +36,109 @@ export function evaluateWalImport(importResult, verifyResult, expectedRows) {
   ];
 }
 
+export function evaluateNormalization(result, quality, manifest, expected, gitCommit) {
+  const summary = quality?.summary ?? {};
+  const rowsBalance = Number(summary.canonical_rows ?? 0)
+    + Number(summary.quarantined_rows ?? 0)
+    + Number(summary.skipped_rows ?? 0);
+  return [
+    check("normalization.status", result?.status === "normalized", result?.status, "normalized"),
+    check("normalization.input_rows", summary.input_rows === expected.inputRows, summary.input_rows, expected.inputRows),
+    check(
+      "normalization.canonical_rows",
+      summary.canonical_rows === expected.canonicalRows,
+      summary.canonical_rows,
+      expected.canonicalRows,
+    ),
+    check(
+      "normalization.quarantined_rows",
+      summary.quarantined_rows === expected.quarantinedRows,
+      summary.quarantined_rows,
+      expected.quarantinedRows,
+    ),
+    check(
+      "normalization.warning_rows",
+      summary.warning_rows === expected.warningRows,
+      summary.warning_rows,
+      expected.warningRows,
+    ),
+    check(
+      "normalization.skipped_rows",
+      summary.skipped_rows === expected.skippedRows,
+      summary.skipped_rows,
+      expected.skippedRows,
+    ),
+    check("normalization.row_balance", rowsBalance === summary.input_rows, rowsBalance, summary.input_rows),
+    check(
+      "normalization.input_lineage",
+      quality?.input_sha256 === manifest?.input?.sha256,
+      quality?.input_sha256,
+      manifest?.input?.sha256,
+    ),
+    check(
+      "normalization.policy_binding",
+      quality?.quality_policy_sha256 === manifest?.quality_policy_sha256,
+      quality?.quality_policy_sha256,
+      manifest?.quality_policy_sha256,
+    ),
+    check("normalization.code_commit", manifest?.code_commit === gitCommit, manifest?.code_commit, gitCommit),
+    check(
+      "normalization.transform_id",
+      /^[a-f0-9]{64}$/.test(String(manifest?.transform_id ?? "")),
+      manifest?.transform_id,
+      "64 lowercase hex characters",
+    ),
+  ];
+}
+
+export function evaluateHostNormalization(result, quality, manifest, profile, gitCommit) {
+  const summary = quality?.summary ?? {};
+  const inputRows = Number(summary.input_rows ?? 0);
+  const canonicalRows = Number(summary.canonical_rows ?? 0);
+  const quarantinedRows = Number(summary.quarantined_rows ?? 0);
+  const skippedRows = Number(summary.skipped_rows ?? 0);
+  const quarantineRatio = inputRows > 0 ? quarantinedRows / inputRows : null;
+  return [
+    check("host_normalization.status", result?.status === "normalized", result?.status, "normalized"),
+    check(
+      "host_normalization.row_balance",
+      canonicalRows + quarantinedRows + skippedRows === inputRows,
+      canonicalRows + quarantinedRows + skippedRows,
+      inputRows,
+    ),
+    check(
+      "host_normalization.canonical_rows",
+      canonicalRows >= profile.minimum_canonical_rows,
+      canonicalRows,
+      `>= ${profile.minimum_canonical_rows}`,
+    ),
+    check(
+      "host_normalization.quarantine_ratio",
+      quarantineRatio !== null && quarantineRatio <= profile.maximum_quarantine_ratio,
+      quarantineRatio,
+      `<= ${profile.maximum_quarantine_ratio}`,
+    ),
+    check(
+      "host_normalization.input_lineage",
+      quality?.input_sha256 === manifest?.input?.sha256,
+      quality?.input_sha256,
+      manifest?.input?.sha256,
+    ),
+    check(
+      "host_normalization.policy_binding",
+      quality?.quality_policy_sha256 === manifest?.quality_policy_sha256,
+      quality?.quality_policy_sha256,
+      manifest?.quality_policy_sha256,
+    ),
+    check(
+      "host_normalization.code_commit",
+      manifest?.code_commit === gitCommit,
+      manifest?.code_commit,
+      gitCommit,
+    ),
+  ];
+}
+
 export function evaluateClock(clockReport, profile) {
   const offset = clockReport?.recommendedClockOffsetMs;
   return [

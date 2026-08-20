@@ -12,11 +12,14 @@
 - 已建立 Rust workspace、版本化 schema、固定市场配置和 CI 安全门。
 - 已建立 NDJSON 原始事件结构、分段 WAL、重启恢复、SHA-256 manifest、时钟探针、
   网络诊断和延迟汇总。
+- 已实现 Binance/Polymarket Raw→Canonical Silver v1、质量标记/quarantine、逐行 lineage
+  与确定性 transform manifest，并纳入本地发布门禁。
 - 当前网络的系统 DNS 存在污染，采集器已支持项目内 DoH。
 - 已恢复 SignalX 可观察的控制面/API 边界和推断部署拓扑。
 - Predict.fun 与 Polymarket 已确认为双目标 venue，第一期仅推进公开/授权只读数据链路。
 - Binance 固定 BTCUSDT/ETHUSDT；Predict.fun 与 Polymarket 的正式市场 ID 仍等待人工/外部冻结。
-- Raw → WAL → seal/verify 已可本地运行；Parquet/R2、canonical、ClickHouse 和 replay 尚未完成。
+- Raw → WAL → seal/verify → canonical/quality 已可本地运行；Parquet/R2、ClickHouse 实例和
+  replay 尚未完成。
 - 大规模服务器部署和实盘执行仍受开发门禁约束。
 
 ## 文档入口
@@ -28,6 +31,7 @@
 - [待人工决策清单](docs/requirements/OPEN_DECISIONS.md)
 - [基础设施容量与成本](docs/requirements/INFRASTRUCTURE_CAPACITY_AND_COST.md)
 - [目标系统架构](docs/architecture/SYSTEM_ARCHITECTURE.md)
+- [Canonical Silver 数据模型](docs/architecture/CANONICAL_DATA_MODEL.md)
 - [原项目推断拓扑](docs/architecture/INFERRED_ORIGINAL_TOPOLOGY.md)
 - [数据源与连通性状态](recon/DATA_SOURCE_STATUS.md)
 - [清洁室勘察记录](recon/EXPLORATION.md)
@@ -49,6 +53,9 @@ cargo run --locked -p wal-cli -- import \
   --wal-dir data/wal \
   --max-segment-bytes 512
 cargo run --locked -p wal-cli -- verify --wal-dir data/wal
+
+# 对 sealed Raw segment 生成 Silver、quarantine、质量报告和转换 manifest
+make normalize INPUT=data/wal/<segment>.ndjson OUTPUT_DIR=data/silver/<unique-run-id>
 ```
 
 公共源实采仍从现有 Node 工具进入；输出可直接交给同一个 WAL：
@@ -76,7 +83,9 @@ make wal-import INPUT=benchmark/data/raw/<capture>.ndjson
 | `benchmark/`, `collectors/` | 已跑通的公共源探针与后续 source adapter |
 | `crates/event-contracts` | Raw、market mapping、segment/dataset manifest 契约 |
 | `crates/collector-core` | 单写者分段 WAL、崩溃尾部隔离、seal/verify |
+| `crates/normalizer-core` | Raw→Silver 映射、质量规则、lineage 与 quarantine |
 | `apps/wal-cli` | NDJSON 导入、恢复和校验命令 |
+| `apps/normalize-cli` | 确定性 canonical 转换与 transform manifest |
 | `schemas/`, `config/` | 不可重解释的 schema 与人工审批市场范围 |
 | `replay/`, `execution/`, `control/`, `research/` | P2/P3 模块边界；尚未宣称已实现 |
 | `infra/` | G2 IaC 边界；当前不会创建云资源 |

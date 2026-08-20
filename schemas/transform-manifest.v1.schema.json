@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/transform-manifest.v1.schema.json",
+  "title": "TransformManifest v1",
+  "type": "object",
+  "required": [
+    "schema_version", "transform_id", "normalizer_version", "canonical_schema_version",
+    "quality_policy_version", "quality_policy_sha256", "code_commit", "input",
+    "canonical_output", "quarantine_output", "quality_report"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "transform_id": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "normalizer_version": { "type": "string", "minLength": 1 },
+    "canonical_schema_version": { "const": 1 },
+    "quality_policy_version": { "type": "string", "minLength": 1 },
+    "quality_policy_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "code_commit": { "type": "string", "minLength": 1 },
+    "input": { "$ref": "#/$defs/artifact" },
+    "canonical_output": { "$ref": "#/$defs/artifact" },
+    "quarantine_output": { "$ref": "#/$defs/artifact" },
+    "quality_report": { "$ref": "#/$defs/artifact" }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": ["file", "sha256", "byte_count", "row_count"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "byte_count": { "type": "integer", "minimum": 0 },
+        "row_count": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

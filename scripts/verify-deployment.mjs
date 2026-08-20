@@ -10,7 +10,9 @@ import {
   check,
   evaluateCaptureSummary,
   evaluateClock,
+  evaluateHostNormalization,
   evaluateNetwork,
+  evaluateNormalization,
   evaluateRuntime,
   evaluateWalImport,
   overallStatus,
@@ -152,17 +154,23 @@ async function runtimeChecks() {
   };
 }
 
-async function ensureWalBinary() {
-  const binary = join(repositoryRoot, "target", "debug", process.platform === "win32" ? "wal-cli.exe" : "wal-cli");
+async function ensureToolBinaries() {
+  const suffix = process.platform === "win32" ? ".exe" : "";
+  const binaries = {
+    wal: join(repositoryRoot, "target", "debug", `wal-cli${suffix}`),
+    normalize: join(repositoryRoot, "target", "debug", `normalize-cli${suffix}`),
+  };
   if (args["no-build"]) {
-    await access(binary);
+    await Promise.all(Object.values(binaries).map((binary) => access(binary)));
   } else {
-    await runStep("wal-build", "cargo", ["build", "--locked", "-p", "wal-cli"]);
+    await runStep("tool-build", "cargo", [
+      "build", "--locked", "-p", "wal-cli", "-p", "normalize-cli",
+    ]);
   }
-  return binary;
+  return binaries;
 }
 
-async function runLocalVerification(walBinary, git) {
+async function runLocalVerification(binaries, git) {
   if (!args["skip-checks"]) {
     await runStep("rust-format", "cargo", ["fmt", "--all", "--", "--check"]);
     await runStep("rust-clippy", "cargo", ["clippy", "--workspace", "--all-targets", "--locked", "--", "-D", "warnings"]);
@@ -172,21 +180,52 @@ async function runLocalVerification(walBinary, git) {
 
   const walDirectory = join(outputDirectory, "wal");
   const fixture = join(repositoryRoot, "fixtures", "raw", "sample-events.v1.ndjson");
-  const importStep = await runStep("fixture-wal-import", walBinary, [
+  const importStep = await runStep("fixture-wal-import", binaries.wal, [
     "import", "--input", fixture,
     "--wal-dir", walDirectory,
     "--max-segment-bytes", String(profile.local.fixture_segment_bytes),
     "--git-commit", git.commit,
   ]);
-  const verifyStep = await runStep("fixture-wal-verify", walBinary, ["verify", "--wal-dir", walDirectory]);
+  const verifyStep = await runStep("fixture-wal-verify", binaries.wal, ["verify", "--wal-dir", walDirectory]);
   checks.push(...evaluateWalImport(
     parseJsonOutput(importStep),
     parseJsonOutput(verifyStep),
     profile.local.fixture_rows,
   ));
+
+  const silverDirectory = join(outputDirectory, "silver");
+  const canonicalPath = join(silverDirectory, "canonical.ndjson");
+  const quarantinePath = join(silverDirectory, "quarantine.ndjson");
+  const qualityPath = join(silverDirectory, "quality.json");
+  const manifestPath = join(silverDirectory, "transform-manifest.json");
+  const normalizeStep = await runStep("fixture-normalize", binaries.normalize, [
+    "normalize",
+    "--input", join(repositoryRoot, "fixtures/raw/quality-cases.v1.ndjson"),
+    "--output", canonicalPath,
+    "--quarantine", quarantinePath,
+    "--quality-report", qualityPath,
+    "--manifest", manifestPath,
+    "--quality-policy", join(repositoryRoot, "config/quality-policy.v1.json"),
+    "--git-commit", git.commit,
+  ]);
+  const quality = JSON.parse(await readFile(qualityPath, "utf8"));
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  checks.push(...evaluateNormalization(
+    parseJsonOutput(normalizeStep),
+    quality,
+    manifest,
+    {
+      inputRows: profile.local.normalization_fixture_rows,
+      canonicalRows: profile.local.normalization_canonical_rows,
+      quarantinedRows: profile.local.normalization_quarantined_rows,
+      skippedRows: profile.local.normalization_skipped_rows,
+      warningRows: profile.local.normalization_warning_rows,
+    },
+    git.commit,
+  ));
 }
 
-async function runHostSmoke(walBinary, git) {
+async function runHostSmoke(binaries, git) {
   const hostProfile = profile.host_smoke;
   const duration = positiveNumber(args.duration, hostProfile.duration_seconds, "--duration");
   const dnsMode = String(args.dns ?? "doh");
@@ -195,6 +234,11 @@ async function runHostSmoke(walBinary, git) {
   const networkPath = join(outputDirectory, "network.json");
   const capturePath = join(outputDirectory, "capture.ndjson");
   const walDirectory = join(outputDirectory, "wal");
+  const silverDirectory = join(outputDirectory, "silver");
+  const canonicalPath = join(silverDirectory, "canonical.ndjson");
+  const quarantinePath = join(silverDirectory, "quarantine.ndjson");
+  const qualityPath = join(silverDirectory, "quality.json");
+  const transformManifestPath = join(silverDirectory, "transform-manifest.json");
 
   const [networkStep, clockStep, captureStep] = await Promise.all([
     runStep("network", process.execPath, [
@@ -245,12 +289,37 @@ async function runHostSmoke(walBinary, git) {
     if (Number.isFinite(clockReport?.recommendedClockOffsetMs)) {
       summaryArgs.push("--clock-offset-ms", String(clockReport.recommendedClockOffsetMs));
     }
-    const summaryStep = await runStep("summary", process.execPath, summaryArgs, { required: false, severity: "error" });
-    const importStep = await runStep("capture-wal-import", walBinary, [
-      "import", "--input", capturePath,
-      "--wal-dir", walDirectory,
-      "--git-commit", git.commit,
-    ], { required: false, severity: "error" });
+    const [summaryStep, importStep, normalizeStep] = await Promise.all([
+      runStep("summary", process.execPath, summaryArgs, { required: false, severity: "error" }),
+      runStep("capture-wal-import", binaries.wal, [
+        "import", "--input", capturePath,
+        "--wal-dir", walDirectory,
+        "--git-commit", git.commit,
+      ], { required: false, severity: "error" }),
+      runStep("capture-normalize", binaries.normalize, [
+        "normalize",
+        "--input", capturePath,
+        "--output", canonicalPath,
+        "--quarantine", quarantinePath,
+        "--quality-report", qualityPath,
+        "--manifest", transformManifestPath,
+        "--quality-policy", join(repositoryRoot, "config/quality-policy.v1.json"),
+        "--git-commit", git.commit,
+      ], { required: false, severity: "error" }),
+    ]);
+    if (normalizeStep.exit_code === 0) {
+      try {
+        checks.push(...evaluateHostNormalization(
+          parseJsonOutput(normalizeStep),
+          JSON.parse(await readFile(qualityPath, "utf8")),
+          JSON.parse(await readFile(transformManifestPath, "utf8")),
+          hostProfile,
+          git.commit,
+        ));
+      } catch (error) {
+        checks.push(check("host_normalization.report_json", false, String(error.message), "valid JSON"));
+      }
+    }
     if (summaryStep.exit_code === 0) {
       try {
         const summary = parseJsonOutput(summaryStep);
@@ -258,7 +327,7 @@ async function runHostSmoke(walBinary, git) {
         if (importStep.exit_code === 0) {
           const verifyStep = await runStep(
             "capture-wal-verify",
-            walBinary,
+            binaries.wal,
             ["verify", "--wal-dir", walDirectory],
             { required: false, severity: "error" },
           );
@@ -295,11 +364,11 @@ try {
   git = await gitMetadata();
   await runStep("live-safety", process.execPath, ["scripts/check-live-safety.mjs"]);
   await runStep("readiness", process.execPath, ["scripts/report-readiness.mjs"], { required: false });
-  const walBinary = await ensureWalBinary();
+  const binaries = await ensureToolBinaries();
   if (mode === "local") {
-    await runLocalVerification(walBinary, git);
+    await runLocalVerification(binaries, git);
   } else {
-    await runHostSmoke(walBinary, git);
+    await runHostSmoke(binaries, git);
   }
 } catch (error) {
   fatalError = String(error?.message ?? error);

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/canonical-market-event.v1.schema.json",
+  "title": "CanonicalMarketEvent v1",
+  "type": "object",
+  "required": [
+    "schema_version", "canonical_event_id", "event_kind", "source", "stream",
+    "session_id", "instrument", "market_id", "outcome_id", "source_event_ts_ms",
+    "available_at_ms", "recv_mono_ns", "sequence_start", "sequence_end", "price",
+    "quantity", "best_bid", "best_ask", "bids", "asks", "quality_flags", "lineage"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "canonical_event_id": { "type": "string", "pattern": "^[a-f0-9]{64}:[0-9]+$" },
+    "event_kind": { "enum": ["trade", "best_bid_ask", "book_snapshot", "book_delta"] },
+    "source": { "type": "string", "minLength": 1 },
+    "stream": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "instrument": { "type": "string", "minLength": 1 },
+    "market_id": { "type": ["string", "null"] },
+    "outcome_id": { "type": ["string", "null"] },
+    "source_event_ts_ms": { "type": ["number", "null"] },
+    "available_at_ms": { "type": "number", "exclusiveMinimum": 0 },
+    "recv_mono_ns": { "type": "string", "pattern": "^[0-9]+$" },
+    "sequence_start": { "type": ["integer", "null"] },
+    "sequence_end": { "type": ["integer", "null"] },
+    "price": { "$ref": "#/$defs/nullableDecimal" },
+    "quantity": { "$ref": "#/$defs/nullableDecimal" },
+    "best_bid": { "$ref": "#/$defs/nullableDecimal" },
+    "best_ask": { "$ref": "#/$defs/nullableDecimal" },
+    "bids": { "type": "array", "items": { "$ref": "#/$defs/priceLevel" } },
+    "asks": { "type": "array", "items": { "$ref": "#/$defs/priceLevel" } },
+    "quality_flags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "lineage": {
+      "type": "object",
+      "required": ["input_sha256", "line_number", "raw_event_sha256", "raw_schema_version"],
+      "properties": {
+        "input_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "line_number": { "type": "integer", "minimum": 1 },
+        "raw_event_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "raw_schema_version": { "const": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "decimal": { "type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?$" },
+    "nullableDecimal": { "anyOf": [{ "$ref": "#/$defs/decimal" }, { "type": "null" }] },
+    "priceLevel": {
+      "type": "object",
+      "required": ["price", "quantity"],
+      "properties": {
+        "price": { "$ref": "#/$defs/decimal" },
+        "quantity": { "$ref": "#/$defs/decimal" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

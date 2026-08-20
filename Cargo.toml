@@ -1,8 +1,10 @@
 [workspace]
 members = [
+  "apps/normalize-cli",
   "apps/wal-cli",
   "crates/collector-core",
   "crates/event-contracts",
+  "crates/normalizer-core",
 ]
 resolver = "2"
 

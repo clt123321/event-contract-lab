@@ -5,7 +5,9 @@ import {
   compareReports,
   evaluateCaptureSummary,
   evaluateClock,
+  evaluateHostNormalization,
   evaluateNetwork,
+  evaluateNormalization,
   evaluateWalImport,
   overallStatus,
 } from "../../scripts/lib/verification.mjs";
@@ -21,6 +23,50 @@ test("WAL evaluation binds imported and verified row counts", () => {
     { status: "sealed", imported_rows: 2 },
     { status: "verified", rows: 1, segments: 1 },
     2,
+  )), "failed");
+});
+
+test("normalization evaluation binds rows, input, policy and code identity", () => {
+  const checks = evaluateNormalization(
+    { status: "normalized" },
+    {
+      input_sha256: "input",
+      quality_policy_sha256: "policy",
+      summary: {
+        input_rows: 6, canonical_rows: 2, quarantined_rows: 4, skipped_rows: 0, warning_rows: 1,
+      },
+    },
+    {
+      transform_id: "a".repeat(64),
+      input: { sha256: "input" },
+      quality_policy_sha256: "policy",
+      code_commit: "commit",
+    },
+    { inputRows: 6, canonicalRows: 2, quarantinedRows: 4, skippedRows: 0, warningRows: 1 },
+    "commit",
+  );
+  assert.equal(overallStatus(checks), "passed");
+});
+
+test("host normalization enforces canonical volume and quarantine ratio", () => {
+  const quality = {
+    input_sha256: "input",
+    quality_policy_sha256: "policy",
+    summary: { input_rows: 1_000, canonical_rows: 990, quarantined_rows: 5, skipped_rows: 5 },
+  };
+  const manifest = {
+    input: { sha256: "input" },
+    quality_policy_sha256: "policy",
+    code_commit: "commit",
+  };
+  const profile = { minimum_canonical_rows: 10, maximum_quarantine_ratio: 0.01 };
+  assert.equal(overallStatus(evaluateHostNormalization(
+    { status: "normalized" }, quality, manifest, profile, "commit",
+  )), "passed");
+  quality.summary.quarantined_rows = 20;
+  quality.summary.canonical_rows = 975;
+  assert.equal(overallStatus(evaluateHostNormalization(
+    { status: "normalized" }, quality, manifest, profile, "commit",
   )), "failed");
 });
 

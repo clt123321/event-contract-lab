@@ -33,7 +33,7 @@ if (polymarketMarkets.length < minimumPolymarket || polymarketMarkets.length > m
 }
 
 blockers.push(
-  { owner: "project_owner", gate: "G2-after-L3", item: "After the clean local release passes, provide AWS project account, Tokyo deploy role, billing owner, and $100/$150 alert recipients" },
+  { owner: "project_owner", gate: "G2-after-local-data-replay", item: "After local Parquet/replay/deploy-artifact gates pass, provide AWS project account, Tokyo deploy role, billing owner, and $100/$150 alert recipients" },
   { owner: "project_owner", gate: "G3", item: "Keep live execution blocked; legal/account/geography/risk approval is not granted" },
 );
 
@@ -42,7 +42,7 @@ console.log(JSON.stringify({
   public_local_development_ready: binanceSymbols.length >= 2,
   formal_three_source_benchmark_ready: !blockers.some((item) => item.gate === "P0"),
   cloud_application_recommended_now: false,
-  next_engineering_gate: "make verify-release on a clean commit",
+  next_engineering_gate: "deterministic Parquet export on Canonical Silver v1, then replay fixture",
   cloud_deployment_ready: false,
   live_execution_enabled: config.execution?.live_enabled === true,
   blockers,

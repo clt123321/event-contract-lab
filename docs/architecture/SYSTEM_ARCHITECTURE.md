@@ -1,6 +1,6 @@
 # 目标系统架构
 
-版本：v0.3｜状态：Proposed
+版本：v0.4｜状态：Partially implemented
 
 ## 1. 总体结构
 
@@ -45,6 +45,10 @@ WAL；live adapter 即使存在，也必须由风险门禁和独立配置显式�
 | Agent Control | 注册、版本、不可变配置、任务和健康状态 | control API + audit trail |
 | Observability | 统一 correlation ID、指标、日志、trace 和告警 | dashboards + alerts |
 
+Collector Raw/WAL 和 Normalizer 的首个本地实现已经落地；Archive、ClickHouse、Replay、OMS
+及控制面仍是目标架构，不应从图中误读为已部署。Canonical 字段与质量处置见
+[`CANONICAL_DATA_MODEL.md`](CANONICAL_DATA_MODEL.md)。
+
 ## 3. 时间与数据语义
 
 每条原始事件至少保留：
@@ -63,9 +67,12 @@ WAL；live adapter 即使存在，也必须由风险门禁和独立配置显式�
 ```text
 apps/
   console/               # 运维与研究控制台
+  wal-cli/               # Raw segment 工具
+  normalize-cli/         # 本地 Silver 转换工具
 crates/
   event-contracts/       # canonical schema 与版本兼容
   collector-core/        # 连接、WAL、状态机
+  normalizer-core/       # Raw→Silver、quality、quarantine
   collectors/            # binance/predictfun/polymarket/chainlink/deribit
   replay/                # 确定性事件调度与模拟
   execution/             # OMS、venue adapter、paper/live

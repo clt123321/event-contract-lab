@@ -53,7 +53,7 @@ Agent 运维和审计。
 - `FR-108`：部署前必须验证 DNS、TLS、WebSocket 和 NTP/PTP。
 - `FR-109`：本地发布候选和部署后 smoke 必须复用版本化阈值及机器可读报告；每次调整
   生成新报告，不覆盖或人工修改历史结果。
-- `FR-109`：source role 必须显式区分 execution venue、reference、oracle 和 research；
+- `FR-110`：source role 必须显式区分 execution venue、reference、oracle 和 research；
   Predict.fun/Polymarket 为目标 venue，Binance 为首个 reference source。
 
 验收：连续 24 小时无静默断流；重连和断序均有记录；源时间缺失不会伪造延迟。
@@ -62,12 +62,15 @@ Agent 运维和审计。
 
 - `FR-201 CONFIRMED`：统一原始事件 envelope 版本化。
 - `FR-202`：建立 instrument、market、outcome 跨源映射。
-- `FR-203`：建立 trade、book snapshot、book delta、BBO、reference price 事实表。
+- `FR-203 IMPLEMENTED LOCAL`：建立 trade、book snapshot、book delta、BBO、reference price
+  事实表；当前 Canonical v1 已覆盖前四类，reference price 专用事实仍待实现。
 - `FR-204`：建立 source connection、latency sample、data quality 事实表。
 - `FR-205`：支持 NDJSON/Parquet 冷存储和 ClickHouse 热查询。
-- `FR-206`：隔离无效时间戳、负价差、断序、交叉盘口和不可恢复 book。
+- `FR-206 IMPLEMENTED LOCAL`：隔离无效时间戳、重复、序列回退、BBO/完整快照交叉、
+  概率越界和不可解析 book；warning 与 quarantine 均有版本化计数。
 - `FR-207`：数据分为 Raw/Bronze、Canonical/Silver、Serving/Gold，后两层均可由上游重建。
-- `FR-208`：建立 dataset manifest 和字段 lineage，Gold 指标可回溯到 canonical 行和原始对象。
+- `FR-208 PARTIAL`：已建立逐行 Raw→canonical lineage 和 transform manifest；dataset
+  manifest 与 Gold lineage 在 P2 完成。
 
 验收：任意事实行可回溯到原始事件；同一批数据重复转换结果一致。
 
@@ -163,7 +166,7 @@ Agent 运维和审计。
 | 阶段 | 交付物 | 当前判断 |
 |---|---|---|
 | M0 探索与契约 | 源清单、原始 envelope、网络与时钟诊断 | 基本完成 |
-| M1 数据链路与模型 | 双 venue 只读、WAL、Parquet、质量报告、canonical schema | 可立即开始 |
+| M1 数据链路与模型 | 双 venue 只读、WAL、Parquet、质量报告、canonical schema | 进行中：Parquet/归档待完成 |
 | M2 数仓与数据集 | Bronze/Silver/Gold、ClickHouse、manifest、lineage、恢复 | 等 24h 样本定 DDL |
 | M3 研究与回放 | 冻结数据集、point-in-time、replay、费用/结算、黄金夹具 | 可先建接口 |
 | M4 Paper OMS | 双 venue adapter 接口、订单状态机、模拟执行 | 不启用主网写 |

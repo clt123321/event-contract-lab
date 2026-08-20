@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := check
 
-.PHONY: bootstrap check safety readiness verify-local verify-release verify-host compare-verify rust-check rust-test node-test format format-check wal-import wal-verify
+.PHONY: bootstrap check safety readiness verify-local verify-release verify-host compare-verify rust-check rust-test node-test format format-check wal-import wal-verify normalize
 
 bootstrap:
 	npm --prefix benchmark ci
@@ -54,3 +54,16 @@ wal-import:
 
 wal-verify:
 	cargo run --locked -p wal-cli -- verify --wal-dir data/wal
+
+# Usage: make normalize INPUT=data/wal/<segment>.ndjson OUTPUT_DIR=data/silver/<run-id>
+normalize:
+	test -n "$(INPUT)"
+	test -n "$(OUTPUT_DIR)"
+	cargo run --locked -p normalize-cli -- normalize \
+		--input "$(INPUT)" \
+		--output "$(OUTPUT_DIR)/canonical.ndjson" \
+		--quarantine "$(OUTPUT_DIR)/quarantine.ndjson" \
+		--quality-report "$(OUTPUT_DIR)/quality.json" \
+		--manifest "$(OUTPUT_DIR)/transform-manifest.json" \
+		--quality-policy config/quality-policy.v1.json \
+		--git-commit "$$(git rev-parse --verify HEAD)"

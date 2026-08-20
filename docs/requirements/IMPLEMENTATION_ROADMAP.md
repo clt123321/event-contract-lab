@@ -10,9 +10,9 @@
 ```mermaid
 flowchart LR
     P0["P0 契约与目标源"] --> P1["P1 数据链路与模型"]
-    P1 --> L3["L3 本地发布候选"]
-    L3 --> G2["G2 短期云 benchmark"]
-    P1 --> P2["P2 数仓与研究能力"]
+    P1 --> L3["L3 基础本地发布候选"]
+    L3 --> P2["P2 本地数据与回放候选"]
+    P2 --> G2["G2 短期云 benchmark"]
     P2 --> P4["Paper OMS / 策略验证"]
     P3["P3 DFX 基线"] -. "从第一天约束每个阶段" .-> P0
     P3 -.-> P1
@@ -24,13 +24,17 @@ flowchart LR
 云时钟和 IaC 实机验证外，契约、WAL、canonical、质量规则、回放、paper OMS、故障注入、
 部署预检和上线验证器均优先在本地完成。
 
+当前本地增量：Raw/WAL 之后的 Canonical Silver v1、quality policy、quarantine、逐行 lineage、
+确定性 transform manifest 和 ClickHouse 候选 DDL 已实现；Parquet、对象归档和 replay 是下一批。
+
 ### 本地发布候选门禁 L3
 
 - `make verify-local` 成为日常开发验收入口；
 - `make verify-release` 必须在 clean commit 上通过；
 - 输出版本化阈值下的机器可读 `report.json` 和逐步骤日志；
 - 同一验证器的 `host-smoke` 模式作为未来云节点部署后的第一条命令；
-- L3 通过后才创建 AWS 账号/短期实例，不提前购买 EBS、R2 或长期承诺。
+- L3 是最低发布门禁，不再自动触发云申请；Parquet、回放夹具和部署 artifact/IaC 评审完成后
+  才创建 AWS 账号/短期实例，不提前购买 EBS、R2 或长期承诺。
 
 目标 venue 是 Predict.fun 和 Polymarket；Binance 是第一参考价源。两者先完成公开或
 授权只读数据，execution adapter 可以定义接口但默认禁用。Polymarket 未发现官方公开

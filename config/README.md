@@ -10,3 +10,6 @@ then frozen in a pull request. A dynamic “top market” result is never a form
 
 Any future change that enables a write environment requires a separate G3 decision and must also
 change the CI safety policy. A configuration-only change cannot enable live execution.
+
+`quality-policy.v1.json` is the first Raw→Silver acceptance policy. Formal transforms bind its SHA-256;
+semantic changes require a new policy version rather than editing evidence for an existing dataset.

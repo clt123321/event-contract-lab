@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event-contract-lab.local/schemas/quality-report.v1.schema.json",
+  "title": "QualityReport v1",
+  "type": "object",
+  "required": [
+    "schema_version", "normalizer_version", "quality_policy_version",
+    "quality_policy_sha256", "input_sha256", "summary"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "normalizer_version": { "type": "string", "minLength": 1 },
+    "quality_policy_version": { "type": "string", "minLength": 1 },
+    "quality_policy_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "input_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "summary": {
+      "type": "object",
+      "required": [
+        "input_rows", "canonical_rows", "quarantined_rows", "skipped_rows", "warning_rows",
+        "reason_counts", "skip_counts", "flag_counts"
+      ],
+      "properties": {
+        "input_rows": { "type": "integer", "minimum": 0 },
+        "canonical_rows": { "type": "integer", "minimum": 0 },
+        "quarantined_rows": { "type": "integer", "minimum": 0 },
+        "skipped_rows": { "type": "integer", "minimum": 0 },
+        "warning_rows": { "type": "integer", "minimum": 0 },
+        "reason_counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+        "skip_counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+        "flag_counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

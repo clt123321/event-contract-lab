@@ -30,7 +30,8 @@ make verify-local
 ```
 
 它会检查 Node/磁盘、Git 状态、live safety、Rust fmt/Clippy/test、Node test，并构建
-`wal-cli`，最后用 synthetic fixture 跑通 Raw → segment → manifest → checksum verify。
+`wal-cli` 和 `normalize-cli`，最后用 synthetic fixture 跑通 Raw → segment → manifest →
+checksum verify，以及 Raw → canonical → quality/quarantine → transform manifest。
 工作区有未提交修改时报告为 `warning`，便于开发中持续运行。
 
 准备发布候选时：
@@ -64,6 +65,7 @@ make verify-host
 4. Binance + Polymarket 公共行情短采集；
 5. 延迟、重连、解析错误、断序 summary；
 6. 实采 NDJSON 导入 WAL 并核对 checksum/行数。
+7. 同一份实采数据转为 Canonical Silver，并检查行数守恒、lineage 和 quarantine 比例。
 
 调整时长或网络参数不需要改代码：
 
