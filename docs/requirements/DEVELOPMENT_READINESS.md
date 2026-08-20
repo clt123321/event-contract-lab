@@ -3,6 +3,9 @@
 版本：v0.3｜评估日期：2026-08-20
 结论：**可以开始开发大部分只读数据、回放、paper execution 和控制面骨架；尚不具备大规模生产部署和实盘准入条件。**
 
+云账号和服务器不是当前开发前置条件。先在本地完成可重现发布候选与部署后验证器，
+通过 L3 后再申请 14 天短期节点。
+
 ## 1. 当前可立即开发的范围
 
 | 工作包 | 准备度 | 说明 |
@@ -40,12 +43,23 @@
 - [x] 建立 CI：Rust 格式/Clippy/测试、Node 测试、Raw→WAL 集成和 secret scan。
 - [x] 建立 schema/config 版本策略、变更审查规则和 ADR 模板。
 - [x] 建立测试数据脱敏规则；首个 fixture 为明确标记的 synthetic payload。
+- [x] 建立本地/部署后共用验证器、版本化阈值、逐步骤日志和机器可读报告。
 
 当前 CI 已加入 npm 高危漏洞门禁和 RustSec 依赖审计；许可证策略与 schema 自动代码生成将在
 后续 DFX 批次加入。这不阻塞只读 Raw/WAL 开发，但在 G2 部署前必须完成。
 
-### G2：服务器部署门禁
+### L3：本地发布候选门禁
 
+- [x] `make verify-local` 可在 dirty worktree 中持续运行并明确给出 warning。
+- [x] `make verify-release` 要求 clean commit，失败以非零状态退出。
+- [x] synthetic Raw → WAL → manifest → checksum verify 纳入同一报告。
+- [x] 未来主机 `make verify-host` 复用同一报告格式，覆盖网络、时钟、公共行情和 WAL。
+- [ ] Parquet/canonical/质量隔离、回放黄金夹具和本地故障注入达到 P1/P2 目标。
+- [ ] IaC plan、部署 artifact、版本/回滚策略在不创建云资源的情况下完成评审。
+
+### G2：服务器部署门禁（L3 后）
+
+- [ ] L3 clean release 报告状态为 `passed`，然后再申请云账号和服务器。
 - [ ] 云账号、预算、账单告警和资源负责人明确。
 - [x] 首轮 14 天预算上限 $150 已批准；长期资源和 1 年承诺未被提前购买。
 - [ ] 东京节点完成不少于 24 小时的只读连续 benchmark；Polymarket execution 必须
@@ -93,7 +107,8 @@
 3. 用 24h/7d 样本确定 Bronze/Silver/Gold、ClickHouse DDL 和冻结数据集。
 4. 开发 point-in-time research、确定性 replay、费用/结算和 paper OMS。
 5. 全程强化 CI、安全、测试、观测、IaC、回滚和恢复等 DFX 能力。
-6. 根据 benchmark 和回放结果决定是否投入低延迟优化及 live execution。
+6. 本地 L3 通过后才申请短期云节点，部署后先跑 `make verify-host`。
+7. 根据 benchmark 和回放结果决定是否投入低延迟优化及 live execution。
 
 任何步骤都不得因为“接口已接通”而跳过 G2/G3。
 

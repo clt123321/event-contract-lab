@@ -40,6 +40,8 @@
 make bootstrap
 make check
 make readiness  # 输出仍需项目负责人/外部平台完成的阶段门禁
+make verify-local  # 开发中完整本地验收；dirty Git 只告警
+make verify-release  # 云申请/发布前验收；要求 clean Git
 
 # 将 synthetic fixture 导入分段 WAL，并逐 segment 校验行数、字节数和 SHA-256
 cargo run --locked -p wal-cli -- import \
@@ -62,6 +64,10 @@ make wal-import INPUT=benchmark/data/raw/<capture>.ndjson
 
 `config/market-universe.json` 是首期范围的版本化事实源。CI 会拒绝启用 venue write；
 本仓库当前没有真实下单实现。
+
+云资源申请已后移：先尽量完成本地开发、故障恢复和发布候选验收。未来服务器部署后复用
+同一验证器运行 `make verify-host`，生成网络、时钟、公共行情、summary 和 WAL 证据包。
+详见[部署验证手册](docs/runbooks/DEPLOYMENT_VERIFICATION.md)。
 
 ## Monorepo 布局
 

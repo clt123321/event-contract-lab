@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "local": {
+    "minimum_node_major": 22,
+    "minimum_free_disk_mib": 1024,
+    "fixture_rows": 2,
+    "fixture_segment_bytes": 512
+  },
+  "host_smoke": {
+    "duration_seconds": 30,
+    "clock_samples": 5,
+    "network_timeout_ms": 8000,
+    "minimum_capture_rows": 10,
+    "maximum_invalid_json": 0,
+    "maximum_connection_errors": 0,
+    "maximum_parse_errors": 0,
+    "maximum_absolute_clock_offset_ms": 100,
+    "required_market_data_sources": ["binance", "polymarket"],
+    "required_network_targets": [
+      "binance-market-data",
+      "polymarket-gamma",
+      "polymarket-market-ws"
+    ]
+  },
+  "formal_benchmark": {
+    "minimum_clock_samples": 10,
+    "maximum_absolute_clock_offset_ms": 10,
+    "minimum_duration_hours": 24,
+    "requires_frozen_market_ids": true,
+    "requires_clean_git_commit": true
+  }
+}

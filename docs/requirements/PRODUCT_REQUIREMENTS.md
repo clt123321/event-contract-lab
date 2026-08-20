@@ -51,6 +51,8 @@ Agent 运维和审计。
 - `FR-106`：每条事件记录源时间、接收 wall clock、接收 monotonic clock和序列信息。
 - `FR-107`：采集器必须实现心跳、退避重连、重订阅、断序检测和原始 payload 保留。
 - `FR-108`：部署前必须验证 DNS、TLS、WebSocket 和 NTP/PTP。
+- `FR-109`：本地发布候选和部署后 smoke 必须复用版本化阈值及机器可读报告；每次调整
+  生成新报告，不覆盖或人工修改历史结果。
 - `FR-109`：source role 必须显式区分 execution venue、reference、oracle 和 research；
   Predict.fun/Polymarket 为目标 venue，Binance 为首个 reference source。
 

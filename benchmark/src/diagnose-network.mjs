@@ -198,21 +198,35 @@ const report = {
   targets: [],
 };
 
-for (const target of targets) {
+async function probeTarget(target) {
+  const [dns, dnsOverHttps] = await Promise.all([
+    probeDns(target.host),
+    probeDnsOverHttps(target.host),
+  ]);
   const result = {
     id: target.id,
     host: target.host,
     port: target.port,
-    dns: await probeDns(target.host),
-    dnsOverHttps: await probeDnsOverHttps(target.host),
+    dns,
+    dnsOverHttps,
   };
   if (!args["dns-only"]) {
-    result.tls = await probeTls(target.host, target.port);
-    if (target.http) result.http = await probeHttp(target.http);
-    if (target.websocket) result.websocket = await probeWebSocket(target.websocket);
+    const protocolTasks = [];
+    if (target.http || target.websocket) {
+      protocolTasks.push(probeTls(target.host, target.port).then((value) => { result.tls = value; }));
+    }
+    if (target.http) {
+      protocolTasks.push(probeHttp(target.http).then((value) => { result.http = value; }));
+    }
+    if (target.websocket) {
+      protocolTasks.push(probeWebSocket(target.websocket).then((value) => { result.websocket = value; }));
+    }
+    await Promise.all(protocolTasks);
   }
-  report.targets.push(result);
+  return result;
 }
+
+report.targets = await Promise.all(targets.map(probeTarget));
 
 const serialized = `${JSON.stringify(report, null, 2)}\n`;
 if (args.output) {

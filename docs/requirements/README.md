@@ -20,6 +20,7 @@
 | [INFERRED_ORIGINAL_TOPOLOGY.md](../architecture/INFERRED_ORIGINAL_TOPOLOGY.md) | 原项目可观察部署事实和置信度 | 新证据出现 |
 | [DATA_SOURCE_STATUS.md](../../recon/DATA_SOURCE_STATUS.md) | 数据源、鉴权、连通性和表结构状态 | 数据源状态变化 |
 | [PREDICTFUN_BENCHMARK_ONBOARDING.md](../runbooks/PREDICTFUN_BENCHMARK_ONBOARDING.md) | Predict.fun 测试网、API 申请和下单 benchmark 入门 | API/SDK 契约变化 |
+| [DEPLOYMENT_VERIFICATION.md](../runbooks/DEPLOYMENT_VERIFICATION.md) | 本地优先门禁、发布候选和未来主机 smoke 操作手册 | 验证阈值或部署流程变化 |
 
 ## 需求变更规则
 

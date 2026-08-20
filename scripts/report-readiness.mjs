@@ -33,7 +33,7 @@ if (polymarketMarkets.length < minimumPolymarket || polymarketMarkets.length > m
 }
 
 blockers.push(
-  { owner: "project_owner", gate: "G2", item: "Provide AWS project account, Tokyo deploy role, billing owner, and $100/$150 alert recipients" },
+  { owner: "project_owner", gate: "G2-after-L3", item: "After the clean local release passes, provide AWS project account, Tokyo deploy role, billing owner, and $100/$150 alert recipients" },
   { owner: "project_owner", gate: "G3", item: "Keep live execution blocked; legal/account/geography/risk approval is not granted" },
 );
 
@@ -41,6 +41,8 @@ console.log(JSON.stringify({
   config_schema_version: config.schema_version,
   public_local_development_ready: binanceSymbols.length >= 2,
   formal_three_source_benchmark_ready: !blockers.some((item) => item.gate === "P0"),
+  cloud_application_recommended_now: false,
+  next_engineering_gate: "make verify-release on a clean commit",
   cloud_deployment_ready: false,
   live_execution_enabled: config.execution?.live_enabled === true,
   blockers,

@@ -1,6 +1,6 @@
 # 实施路线图：数据优先、研究后置、DFX 贯穿
 
-版本：v0.1｜更新时间：2026-08-18｜状态：Approved
+版本：v0.2｜更新时间：2026-08-20｜状态：Approved / Local-first amended
 
 ## 1. 总体顺序
 
@@ -10,6 +10,8 @@
 ```mermaid
 flowchart LR
     P0["P0 契约与目标源"] --> P1["P1 数据链路与模型"]
+    P1 --> L3["L3 本地发布候选"]
+    L3 --> G2["G2 短期云 benchmark"]
     P1 --> P2["P2 数仓与研究能力"]
     P2 --> P4["Paper OMS / 策略验证"]
     P3["P3 DFX 基线"] -. "从第一天约束每个阶段" .-> P0
@@ -17,6 +19,18 @@ flowchart LR
     P3 -.-> P2
     P3 -.-> P4
 ```
+
+2026-08-20 起，云服务器不再是 P0/P1 开发前置条件。除真实地域网络、长期 soak、云账单、
+云时钟和 IaC 实机验证外，契约、WAL、canonical、质量规则、回放、paper OMS、故障注入、
+部署预检和上线验证器均优先在本地完成。
+
+### 本地发布候选门禁 L3
+
+- `make verify-local` 成为日常开发验收入口；
+- `make verify-release` 必须在 clean commit 上通过；
+- 输出版本化阈值下的机器可读 `report.json` 和逐步骤日志；
+- 同一验证器的 `host-smoke` 模式作为未来云节点部署后的第一条命令；
+- L3 通过后才创建 AWS 账号/短期实例，不提前购买 EBS、R2 或长期承诺。
 
 目标 venue 是 Predict.fun 和 Polymarket；Binance 是第一参考价源。两者先完成公开或
 授权只读数据，execution adapter 可以定义接口但默认禁用。Polymarket 未发现官方公开
@@ -39,7 +53,8 @@ sandbox/testnet，因此任何真实订单路径保持阻塞。
 - Polymarket：只读无需账户；任何 execution 前从实际出口 IP 检查 geoblock，确认账户、
   地域、主体和使用条款；
 - Chainlink/Deribit：若要进入第一期，提供明确 feed ID/channel；默认延后，不阻塞双 venue；
-- AWS：创建账号/项目、付款方式、预算告警接收人和最小权限部署角色。
+- AWS：后移到本地 L3 发布候选通过后；届时再创建账号/项目、付款方式、预算告警接收人
+  和最小权限部署角色。
 
 ### 完成标准
 

@@ -35,9 +35,8 @@ jobs:
       - run: npm --prefix benchmark audit --omit=dev --audit-level=high
       - name: Raw to WAL integration
         run: |
-          wal_dir="$(mktemp -d)"
-          cargo run --locked -p wal-cli -- import --input fixtures/raw/sample-events.v1.ndjson --wal-dir "$wal_dir" --max-segment-bytes 512
-          cargo run --locked -p wal-cli -- verify --wal-dir "$wal_dir"
+          verification_dir="$(mktemp -d)/deployment-verification"
+          node scripts/verify-deployment.mjs --mode local --skip-checks --require-clean --output "$verification_dir"
 
   secret-scan:
     runs-on: ubuntu-latest
