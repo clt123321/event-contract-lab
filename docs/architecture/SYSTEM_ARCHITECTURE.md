@@ -49,7 +49,8 @@ Collector Raw/WAL、Normalizer、单输入 Parquet/Dataset 冻结和 point-in-ti
 已有本地实现；R2、ClickHouse、回放消费者、OMS 及控制面仍是目标架构，不应
 从图中误读为已部署。Canonical 字段与质量处置见
 [`CANONICAL_DATA_MODEL.md`](CANONICAL_DATA_MODEL.md)，数据集和回放契约见
-[`DATASET_AND_REPLAY.md`](DATASET_AND_REPLAY.md)。
+[`DATASET_AND_REPLAY.md`](DATASET_AND_REPLAY.md)，流式采集、分层存储、数据生命周期以及
+回测/实盘消费方式见 [`DATA_FLOW_AND_LIFECYCLE.md`](DATA_FLOW_AND_LIFECYCLE.md)。
 
 ## 3. 时间与数据语义
 

@@ -17,6 +17,7 @@
 | [INFRASTRUCTURE_CAPACITY_AND_COST.md](INFRASTRUCTURE_CAPACITY_AND_COST.md) | 容量模型、租赁明细和阶段预算 | benchmark 或价格变化 |
 | [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md) | P0–P3 顺序、P2 数仓研究和完整 DFX | 阶段或验收变化 |
 | [SYSTEM_ARCHITECTURE.md](../architecture/SYSTEM_ARCHITECTURE.md) | 目标架构和数据流 | 架构决策变化 |
+| [DATA_FLOW_AND_LIFECYCLE.md](../architecture/DATA_FLOW_AND_LIFECYCLE.md) | 流式采集、分层管理、存储生命周期及回测/实盘用法 | 数据路径、保留期或消费模式变化 |
 | [CANONICAL_DATA_MODEL.md](../architecture/CANONICAL_DATA_MODEL.md) | Silver v1、质量处置和 Raw lineage | parser 或质量语义变化 |
 | [DATASET_AND_REPLAY.md](../architecture/DATASET_AND_REPLAY.md) | Parquet v1、Dataset Manifest v2 和确定性 Replay | 数据集或回放契约变化 |
 | [INFERRED_ORIGINAL_TOPOLOGY.md](../architecture/INFERRED_ORIGINAL_TOPOLOGY.md) | 原项目可观察部署事实和置信度 | 新证据出现 |

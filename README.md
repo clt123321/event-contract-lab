@@ -31,6 +31,7 @@
 - [待人工决策清单](docs/requirements/OPEN_DECISIONS.md)
 - [基础设施容量与成本](docs/requirements/INFRASTRUCTURE_CAPACITY_AND_COST.md)
 - [目标系统架构](docs/architecture/SYSTEM_ARCHITECTURE.md)
+- [软件架构、数据流与生命周期](docs/architecture/DATA_FLOW_AND_LIFECYCLE.md)
 - [Canonical Silver 数据模型](docs/architecture/CANONICAL_DATA_MODEL.md)
 - [原项目推断拓扑](docs/architecture/INFERRED_ORIGINAL_TOPOLOGY.md)
 - [数据源与连通性状态](recon/DATA_SOURCE_STATUS.md)
