@@ -3,19 +3,13 @@
 .env.*
 !.env.example
 
-node_modules/
-**/node_modules/
-target/
 *.log
 *.tmp
 *.swp
 
-# Runtime captures, diagnostics and local benchmark reports.
-benchmark/data/
-data/
-
-# Generated visual QA pages. Keep the source generator and final PDF/DOCX.
-qa_render/page-*.png
+# Local exploration captures and reports. Keep only their README in Git.
+exploration/local-data/**
+!exploration/local-data/README.md
 
 # Language/tool caches.
 __pycache__/
@@ -33,6 +27,6 @@ build/
 credentials.json
 secrets/
 
-# Local IDE and Rust tooling state.
+# Local IDE state.
 .idea/
 .vscode/

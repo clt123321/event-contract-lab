@@ -1,6 +1,15 @@
-# Infrastructure (G2 pending)
+# Infrastructure boundary
 
-No cloud resources are created by this repository yet. Cloud application is intentionally deferred until
-the clean local release gate passes. Terraform modules can be developed and tested locally first, but
-`apply` waits for the project AWS account, deployment role, Tokyo region, cost tags, and $100/$150 budget
-alert recipients. The approved 14-day benchmark ceiling is $150; it is not permission to buy commitments.
+本目录是未来基础设施的明确边界，当前**不包含 IaC，也不会创建云资源**。
+
+重新引入采集器、数据库、回放或部署代码前，必须先满足：
+
+1. 至少一张策略假设表单已经批准；
+2. 新组件对应明确的数据字段、频率、保留期或执行门禁；
+3. 本地小样本证明问题可研究；
+4. 代码的验收、销毁和成本上限已经定义。
+
+已批准但后置的云实验是东京 14 天 benchmark，预算硬上限 `$150`。创建资源前仍需重新确认
+账号、付款方式、预算告警、部署角色、数据范围和实验后销毁清单。
+
+目标不是预先搭一套“大而全”平台，而是让每一项基础设施都能由策略价值或风险控制解释。
