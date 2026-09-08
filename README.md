@@ -10,6 +10,7 @@ WAL、Parquet、Dataset Manifest 和 Replay 的技术可行性；v0.2 后不再�
 ## 入口
 
 - [事件合约系统化交易白皮书 v0.2](docs/WHITEPAPER.md)：市场结构、五类策略、验证方法、Demo 结论与路线图；
+- [盘口实习行动指南](docs/MANUAL_MARKET_PRACTICUM.md)：从只读观察、Paper 下单到可选最小真实订单，用体验反推策略和数据模型；
 - [探索区说明](exploration/README.md)：SignalX Demo 证据、数据源调查和本地采集证据边界；
 - [基础设施边界](infra/README.md)：何时才值得重新建设代码或申请云资源。
 
@@ -19,7 +20,8 @@ WAL、Parquet、Dataset Manifest 和 Replay 的技术可行性；v0.2 后不再�
 event-contract-lab/
 ├── README.md
 ├── docs/
-│   └── WHITEPAPER.md
+│   ├── WHITEPAPER.md
+│   └── MANUAL_MARKET_PRACTICUM.md
 ├── exploration/
 │   ├── README.md
 │   ├── signalx/          # 授权只读观察、公开接口与清洁室推断

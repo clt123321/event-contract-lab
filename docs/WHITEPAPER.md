@@ -415,6 +415,9 @@ Fair Probability 和 Lead-lag 共用同一条 Crypto 数据链：前者回答“
 会带来存储、质量和研究债务。Raw 数据仍以流式采集为主，因为历史下载通常不能恢复我们的收件时间、
 短暂 order-book 状态、断线和重连，这些恰好是 Lead-lag 与微观结构研究的核心。
 
+在正式填写策略表单前，先按[盘口实习行动指南](./MANUAL_MARKET_PRACTICUM.md)完成只读观察、Paper
+Taker、Paper Maker 和结构扫描。真实订单只是可选的订单生命周期体验，不是策略有效性的证据。
+
 ### 6.3 三个首批示例
 
 #### 示例 A：Fair Probability
